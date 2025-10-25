@@ -10,5 +10,6 @@ def initialize():
     create_user('bob', 'bobpass', "student")
     create_user('frank', 'frankpass', "employer")
     create_user('john', 'johnpass', "staff")
-    open_position('Software Engineer', 1, 5)
-    add_student_to_shortlist(1, 1, 1)
+    open_position(user_id=2, title='Software Engineer', number_of_positions= 6)
+    open_position(user_id=2, title='Mechanical Engineer', number_of_positions= 6)
+    add_student_to_shortlist(student_id=1, position_id=1, staff_id=3)

@@ -6,7 +6,7 @@ from.index import index_views
 
 from App.controllers import (
     login,
-
+    create_user,
 )
 
 auth_views = Blueprint('auth_views', __name__, template_folder='../templates')
@@ -36,6 +36,20 @@ def login_action():
         set_access_cookies(response, token) 
     return response
 
+@auth_views.route('/signup', methods=['POST'])
+def signup_action():
+    data = request.form
+    status = create_user(data['username'], data['password'], data['type'])
+    response = redirect(request.referrer)
+    if not status:
+        flash('Signup failed, username taken!'), 401
+    else:
+        token = login(data['username'], data['password'])
+        flash('Signup Successful')
+        set_access_cookies(response, token)
+    return response
+
+
 @auth_views.route('/logout', methods=['GET'])
 def logout_action():
     response = redirect(request.referrer) 
@@ -53,9 +67,22 @@ def user_login_api():
   token = login(data['username'], data['password'])
   if not token:
     return jsonify(message='bad username or password given'), 401
-  response = jsonify(access_token=token) 
+  response = jsonify(access_token=token)
   set_access_cookies(response, token)
   return response
+
+@auth_views.route('/api/signup', methods=['POST'])
+def signup_api():
+    data = request.json
+    status = create_user(data['username'], data['password'], data['type'])
+    if not status:
+        return jsonify(message='Signup failed, username taken!'), 401
+    else:
+        token = login(data['username'], data['password'])
+        flash('Signup Successful')
+        response = jsonify(access_token=token)
+        set_access_cookies(response, token) 
+        return response
 
 @auth_views.route('/api/identify', methods=['GET'])
 @jwt_required()

@@ -1,26 +1,13 @@
 from flask_jwt_extended import create_access_token, jwt_required, JWTManager, get_jwt_identity, verify_jwt_in_request
 
-from App.models import User, Staff, Student, Employer
+from App.models import User
 from App.database import db
 
 def login(username, password):
-  result = db.session.execute(db.select(Staff).filter_by(username=username))
-  staff = result.scalar_one_or_none()
-  if staff and staff.check_password(password):
-    # Store ONLY the user id as a string in JWT 'sub'
-    return create_access_token(identity=str(staff.id))
-  result = db.session.execute(db.select(Student).filter_by(username=username))
-  student = result.scalar_one_or_none()
-  if student and student.check_password(password):
-    # Store ONLY the user id as a string in JWT 'sub'
-    return create_access_token(identity=str(student.id))
-  result = db.session.execute(db.select(Employer).filter_by(username=username))
-  employer = result.scalar_one_or_none()
-  if employer and employer.check_password(password):
-    # Store ONLY the user id as a string in JWT 'sub'
-    return create_access_token(identity=str(employer.id))
+  user = User.query.filter_by(username=username).first()
+  if user and user.check_password(password):
+    return create_access_token(identity=str(user.id))
   return None
-
 
 def setup_jwt(app):
   jwt = JWTManager(app)
