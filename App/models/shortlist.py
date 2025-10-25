@@ -28,7 +28,7 @@ class Shortlist(db.Model):
         self.title = title
         
     def update_status(self, status):
-        self.status = status
+        self.status = PositionStatus(status)
         db.session.commit()
         return self.status
 
