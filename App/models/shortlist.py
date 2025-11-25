@@ -19,6 +19,7 @@ class Shortlist(db.Model):
     student = db.relationship('Student', backref=db.backref('shortlist', lazy=True))
     position = db.relationship('Position', backref=db.backref('shortlist', lazy=True))
     staff = db.relationship('Staff', backref=db.backref('shortlist', lazy=True))
+    #Pending Commit
 
     def __init__(self, student_id, position_id, staff_id, title):
         self.student_id = student_id
