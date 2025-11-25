@@ -42,6 +42,8 @@ def get_student_shortlist(student_id):
 @require_role('employer')
 def shortlist_decide():
     data = request.json
+    if not data or 'student_id' not in data or 'position_id' not in data or 'decision' not in data:
+        return jsonify({"error": "Missing required fields"}), 400
     request_result = decide_shortlist(data['student_id'], data['position_id'], data['decision'])
 
     if request_result:
