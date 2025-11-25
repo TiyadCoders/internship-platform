@@ -61,6 +61,10 @@ def update_shortlist_status(shortlist_id, status):
     shortlist = db.session.get(Shortlist, shortlist_id)
     if not shortlist:
         return None
-    shortlist.status = DecisionStatus(status) if isinstance(status, str) else status
-    db.session.commit()
-    return shortlist
+    try:
+        shortlist.status = DecisionStatus(status) if isinstance(status, str) else status
+        db.session.commit()
+        return shortlist
+    except Exception:
+        db.session.rollback()
+        return None
