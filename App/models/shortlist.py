@@ -24,21 +24,10 @@ class Shortlist(db.Model):
     def __init__(self, student_id, position_id, staff_id, title):
         self.student_id = student_id
         self.position_id = position_id
-        self.status = "pending"
+        self.status = DecisionStatus.pending
         self.staff_id = staff_id
         self.title = title
-        
-    def update_status(self, status):
-        self.status = PositionStatus(status)
-        db.session.commit()
-        return self.status
 
-    def student_shortlist(self, student_id):
-        return db.session.query(Shortlist).filter_by(student_id=student_id).all()
-
-    def position_shortlist(self, position_id):
-        return db.session.query(Shortlist).filter_by(position_id=position_id).all()
-        
     def toJSON(self):
         return{
             "id": self.id,

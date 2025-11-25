@@ -18,27 +18,8 @@ class Position(db.Model):
     def __init__(self, title, employer_id, number):
         self.title = title
         self.employer_id = employer_id
-        self.status = "open"
+        self.status = PositionStatus.open
         self.number_of_positions = number
-        
-
-    def update_status(self, status):
-        self.status = status
-        db.session.commit()
-        return self.status
-
-    def update_number_of_positions(self, number_of_positions):
-        self.number_of_positions = number_of_positions
-        db.session.commit()
-        return self.number_of_positions
-
-    def delete_position(self):
-        db.session.delete(self)
-        db.session.commit()
-        return
-
-    def list_positions(self):
-        return db.session.query(Position).all()
 
     def toJSON(self):
         return {
