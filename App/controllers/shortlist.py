@@ -39,8 +39,12 @@ def decide_shortlist(student_id, position_id, decision):
         shortlist.status = DecisionStatus(decision) if isinstance(decision, str) else decision
         if shortlist.status == DecisionStatus.accepted:
             position.number_of_positions = position.number_of_positions - 1
-        db.session.commit()
-        return shortlist
+        try:
+            db.session.commit()
+            return shortlist
+        except Exception:
+            db.session.rollback()
+            return False
     return False
 
 
