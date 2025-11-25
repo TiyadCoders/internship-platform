@@ -57,4 +57,3 @@ def shortlist_decide():
 def get_position_shortlist(position_id):
     shortlists = get_shortlist_by_position(position_id)
     return jsonify([s.toJSON() for s in shortlists]), 200
-     
