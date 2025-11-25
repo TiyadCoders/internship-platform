@@ -41,22 +41,34 @@ def update_position_status(position_id, status):
     position = db.session.get(Position, position_id)
     if not position:
         return None
-    position.status = PositionStatus(status) if isinstance(status, str) else status
-    db.session.commit()
-    return position
+    try:
+        position.status = PositionStatus(status) if isinstance(status, str) else status
+        db.session.commit()
+        return position
+    except Exception:
+        db.session.rollback()
+        return None
 
 def update_position_count(position_id, number_of_positions):
     position = db.session.get(Position, position_id)
     if not position:
         return None
-    position.number_of_positions = number_of_positions
-    db.session.commit()
-    return position
+    try:
+        position.number_of_positions = number_of_positions
+        db.session.commit()
+        return position
+    except Exception:
+        db.session.rollback()
+        return None
 
 def delete_position(position_id):
     position = db.session.get(Position, position_id)
     if not position:
         return False
-    db.session.delete(position)
-    db.session.commit()
-    return True
+    try:
+        db.session.delete(position)
+        db.session.commit()
+        return True
+    except Exception:
+        db.session.rollback()
+        return False
