@@ -20,6 +20,8 @@ def get_all_positions():
 @require_role('employer')
 def create_position():
     data = request.json
+    if not data or 'title' not in data or 'number' not in data:
+        return jsonify({"error": "Missing required fields"}), 400
     position = open_position(title=data['title'], user_id=current_user.id, number_of_positions=data['number'])
 
     if position:
