@@ -5,25 +5,25 @@ def create_user(username, password, user_type):
     try:
         newuser = User(username=username, password=password, role=user_type)
         db.session.add(newuser)
-        db.session.flush() 
-        
+        db.session.flush()
+
         if user_type == "student":
-            student = Student(username=username, user_id=newuser.id)
-            db.session.add(student)
+            profile = Student(username=username, user_id=newuser.id)
+            db.session.add(profile)
         elif user_type == "employer":
-            employer = Employer(username=username, user_id=newuser.id)
-            db.session.add(employer)
+            profile = Employer(username=username, user_id=newuser.id)
+            db.session.add(profile)
         elif user_type == "staff":
-            staff = Staff(username=username, user_id=newuser.id)
-            db.session.add(staff)
+            profile = Staff(username=username, user_id=newuser.id)
+            db.session.add(profile)
         else:
-            return False
-        
+            return None
+
         db.session.commit()
-        return True
+        return newuser
     except Exception as e:
         db.session.rollback()
-        return False
+        return None
 
 
 def get_user_by_username(username):

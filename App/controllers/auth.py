@@ -1,4 +1,6 @@
-from flask_jwt_extended import create_access_token, jwt_required, JWTManager, get_jwt_identity, verify_jwt_in_request
+from functools import wraps
+from flask import jsonify
+from flask_jwt_extended import create_access_token, jwt_required, JWTManager, get_jwt_identity, verify_jwt_in_request, current_user
 
 from App.models import User
 from App.database import db
@@ -8,6 +10,19 @@ def login(username, password):
   if user and user.check_password(password):
     return create_access_token(identity=str(user.id))
   return None
+
+
+def require_role(*roles):
+    """Decorator to require specific user role(s) for access."""
+    def decorator(fn):
+        @wraps(fn)
+        @jwt_required()
+        def wrapper(*args, **kwargs):
+            if current_user.role not in roles:
+                return jsonify({"message": "Unauthorized user"}), 403
+            return fn(*args, **kwargs)
+        return wrapper
+    return decorator
 
 def setup_jwt(app):
   jwt = JWTManager(app)
