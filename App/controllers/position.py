@@ -19,6 +19,8 @@ def open_position(user_id, title, number_of_positions=1):
 
 def get_positions_by_employer(user_id):
     employer = Employer.query.filter_by(user_id=user_id).first()
+    if not employer:
+        return []
     return db.session.query(Position).filter_by(employer_id=employer.id).all()
 
 def get_all_positions():
