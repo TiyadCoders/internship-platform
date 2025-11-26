@@ -33,6 +33,9 @@ def shortlist_application(application_id):
     db.session.commit()
     return application
 
+def get_application_by_id(application_id):
+    return db.session.get(Application, application_id)
+
 def accept_application(application_id):
     """Accept an application."""
     application = db.session.get(Application, application_id)
@@ -62,3 +65,65 @@ def get_applications_by_position(position_id):
 def get_application(application_id):
     """Get a single application by ID."""
     return db.session.get(Application, application_id)
+
+
+# Compatibility wrappers for legacy function names used in tests and other modules
+def add_student_to_shortlist(student_id, position_id, staff_id):
+    """Alias for create_application kept for backwards compatibility."""
+    # The tests pass the User.id (not Student.id), so try to resolve a Student record
+    # If student_id is a User id, find the Student profile with user_id == student_id
+    student_profile = db.session.query(Student).filter_by(user_id=student_id).first()
+    if student_profile:
+        resolved_student_id = student_profile.id
+    else:
+        resolved_student_id = student_id
+
+    # Resolve staff similarly if a User.id is provided
+    staff_profile = db.session.query(Staff).filter_by(user_id=staff_id).first()
+    resolved_staff_id = staff_profile.id if staff_profile else staff_id
+
+    return create_application(resolved_student_id, position_id, resolved_staff_id)
+
+
+def get_shortlist_by_student(student_id):
+    """Alias for get_applications_by_student kept for backwards compatibility."""
+    # Accept either User.id (resolve to Student) or Student.id
+    student_profile = db.session.query(Student).filter_by(user_id=student_id).first()
+    if student_profile:
+        return get_applications_by_student(student_profile.id)
+    return get_applications_by_student(student_id)
+
+
+def decide_shortlist(student_id, position_id, decision):
+    """Decide an application by student+position.
+
+    decision: 'accepted' or 'rejected' (case-insensitive)
+    Returns the updated application or False on invalid input.
+    """
+    # Resolve student profile if a User.id was provided
+    student_profile = db.session.query(Student).filter_by(user_id=student_id).first()
+    student_lookup_id = student_profile.id if student_profile else student_id
+
+    application = db.session.query(Application).filter_by(
+        student_id=student_lookup_id,
+        position_id=position_id
+    ).first()
+    if not application:
+        return False
+
+    decision_norm = (decision or "").strip().lower()
+    position = db.session.get(Position, position_id)
+
+    if decision_norm == 'accepted':
+        application.accept()
+        # decrement available positions where applicable
+        if position and getattr(position, 'number_of_positions', 0) > 0:
+            position.number_of_positions = position.number_of_positions - 1
+        db.session.commit()
+        return application
+    elif decision_norm == 'rejected':
+        application.reject()
+        db.session.commit()
+        return application
+
+    return False

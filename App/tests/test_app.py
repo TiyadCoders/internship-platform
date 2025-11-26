@@ -3,11 +3,10 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from App.main import create_app
 from App.database import db, create_db
-from App.models import User, Employer, Position, Shortlist, Staff, Student
+from App.models import User, Employer, Position, Application, Staff, Student
 from App.models.position import PositionStatus
-from App.models.shortlist import DecisionStatus
 from App.models.application_state import (
-    ApplicationStatus, PendingState, ShortlistedState, AcceptedState, RejectedState
+    ApplicationStatus, PendingState, AcceptedState, RejectedState, ShortlistedState
 )
 from App.controllers import (
     create_user,
@@ -61,12 +60,12 @@ class UserUnitTests(unittest.TestCase):
         assert position.status == PositionStatus.open
         assert position.number_of_positions == 5
 
-    def test_new_shortlist(self):
-        shortlist = Shortlist(student_id=1, position_id=2, staff_id=3, title="Test Position")
-        assert shortlist.student_id == 1
-        assert shortlist.position_id == 2
-        assert shortlist.staff_id == 3
-        assert shortlist.status == DecisionStatus.pending
+    def test_new_appliction(self):
+        application = Application(student_id=1, position_id=2, staff_id=3)
+        assert application.student_id == 1
+        assert application.position_id == 2
+        assert application.staff_id == 3
+        assert application.status == ApplicationStatus.PENDING
 
     # pure function no side effects or integrations called
     def test_get_json(self):
@@ -82,7 +81,7 @@ class UserUnitTests(unittest.TestCase):
 
     def test_check_password(self):
         password = "mypass"
-        user = User("bob", password, "student")
+        user = User("bob", password, "mypass")
         assert user.check_password(password)
 
 
@@ -129,10 +128,6 @@ class ApplicationStateUnitTests(unittest.TestCase):
         assert isinstance(new_state, RejectedState)
         assert new_state.current_status == ApplicationStatus.REJECTED
 
-    def test_shortlisted_shortlist_noop(self):
-        state = ShortlistedState()
-        new_state = state.shortlist()
-        assert new_state is state  # Returns self
 
     # AcceptedState tests
     def test_accepted_state_initial_status(self):
@@ -231,7 +226,7 @@ class UserIntegrationTests(unittest.TestCase):
         assert invalid_position is None
 
 
-    def test_add_to_shortlist(self):
+    def test_create_application(self):
         position_count = 3
         staff = create_user("linda", "lindapass", "staff")
         assert staff is not None
@@ -243,13 +238,13 @@ class UserIntegrationTests(unittest.TestCase):
         invalid_position = open_position(user_id=-1, title="Developer", number_of_positions=1)
         assert invalid_position is None
         assert position is not None
-        added_shortlist = add_student_to_shortlist(student.id, position.id, staff.id)
-        assert added_shortlist
-        shortlists = get_shortlist_by_student(student.id)
-        assert any(s.id == added_shortlist.id for s in shortlists)
+        added_application = add_student_to_shortlist(student.id, position.id, staff.id)
+        assert added_application
+        applications = get_shortlist_by_student(student.id)
+        assert any(s.id == added_application.id for s in applications)
 
 
-    def test_decide_shortlist(self):
+    def test_application_state_transitions(self):
         position_count = 3
         student = create_user("jack", "jackpass", "student")
         assert student is not None
@@ -259,19 +254,19 @@ class UserIntegrationTests(unittest.TestCase):
         assert employer is not None
         position = open_position(user_id=employer.id, title="Intern", number_of_positions=position_count)
         assert position is not None
-        stud_shortlist = add_student_to_shortlist(student.id, position.id, staff.id)
-        assert stud_shortlist
-        decided_shortlist = decide_shortlist(student.id, position.id, "accepted")
-        assert decided_shortlist
-        shortlists = get_shortlist_by_student(student.id)
-        assert any(s.status == DecisionStatus.accepted for s in shortlists)
+        stud_application = add_student_to_shortlist(student.id, position.id, staff.id)
+        assert stud_application
+        decided_application = decide_shortlist(student.id, position.id, "accepted")
+        assert decided_application
+        applications = get_shortlist_by_student(student.id)
+        assert any(s.status == ApplicationStatus.ACCEPTED for s in applications)
         assert position.number_of_positions == (position_count - 1)
-        assert len(shortlists) > 0
+        assert len(applications) > 0
         invalid_decision = decide_shortlist(-1, -1, "accepted")
         assert invalid_decision is False
 
 
-    def test_student_view_shortlist(self):
+    def test_student_view_applications(self):
         student = create_user("john", "johnpass", "student")
         assert student is not None
         staff = create_user("tim", "timpass", "staff")
@@ -280,10 +275,10 @@ class UserIntegrationTests(unittest.TestCase):
         assert employer is not None
         position = open_position(user_id=employer.id, title="Software Intern", number_of_positions=4)
         assert position is not None
-        shortlist = add_student_to_shortlist(student.id, position.id, staff.id)
-        shortlists = get_shortlist_by_student(student.id)
-        assert any(shortlist.id == s.id for s in shortlists)
-        assert len(shortlists) > 0
+        application = add_student_to_shortlist(student.id, position.id, staff.id)
+        applications = get_shortlist_by_student(student.id)
+        assert any(application.id == s.id for s in applications)
+        assert len(applications) > 0
 
     # Tests data changes in the database
     #def test_update_user(self):

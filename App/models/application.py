@@ -4,13 +4,13 @@ from App.models.application_state import (ApplicationState, ApplicationStatus, P
 from sqlalchemy import Enum
 
 class Application(db.Model):
-    __tablename__ = 'applications'
+    __tablename__ = 'application'
 
     id = db.Column(db.Integer, primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False)
-    position_id = db.Column(db.Integer, db.ForeignKey('positions.id'), nullable=False)
+    student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=False)
+    position_id = db.Column(db.Integer, db.ForeignKey('position.id'), nullable=False)
     staff_id = db.Column(db.Integer, db.ForeignKey('staff.id'), nullable=True)
-    status = db.Column(Enum(ApplicationStatus), default=ApplicationStatus.pending, nullable=False)
+    status = db.Column(Enum(ApplicationStatus), default=ApplicationStatus.PENDING, nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
 
@@ -22,18 +22,19 @@ class Application(db.Model):
         self.student_id = student_id
         self.position_id = position_id
         self.staff_id = staff_id
-        self.status = ApplicationStatus.pending
+        self.status = ApplicationStatus.PENDING
 
     def _get_state(self) -> ApplicationState:
         state_map = {
             ApplicationStatus.PENDING: PendingState(),
             ApplicationStatus.SHORTLISTED: ShortlistedState(),
             ApplicationStatus.ACCEPTED: AcceptedState(),
-            ApplicationStatus.REJECTED: RejectedState(),}
-        return state_map[self.status]()
+            ApplicationStatus.REJECTED: RejectedState(),
+        }
+        return state_map[self.status]
     
     def set_state(self, new_state: ApplicationState):
-        self.status = new_state.current_status()
+        self.status = new_state.current_status
 
     def shortlist(self):
         new_state = self._get_state().shortlist()
