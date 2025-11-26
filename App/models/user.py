@@ -8,10 +8,6 @@ class User(db.Model):
     password = db.Column(db.String(256), nullable=False)
     role = db.Column(db.String(50), nullable=False)
 
-    student = db.relationship('Student', backref='user', uselist=False)
-    employer = db.relationship('Employer', backref='user', uselist=False)
-    staff = db.relationship('Staff', backref='user', uselist=False)
-    
     def __init__(self, username, password, role):
         self.username = username
         self.set_password(password)
@@ -26,9 +22,9 @@ class User(db.Model):
     def set_password(self, password):
         """Create hashed password."""
         self.password = generate_password_hash(password)
-    
+
     def check_password(self, password):
         """Check hashed password."""
         return check_password_hash(self.password, password)
-        
+
 

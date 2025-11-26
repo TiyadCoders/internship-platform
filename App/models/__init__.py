@@ -4,3 +4,4 @@ from .staff import *
 from .employer import *
 from .position import *
 from .shortlist import *
+from .application_state import *
