@@ -6,6 +6,9 @@ from App.database import db, create_db
 from App.models import User, Employer, Position, Shortlist, Staff, Student
 from App.models.position import PositionStatus
 from App.models.shortlist import DecisionStatus
+from App.models.application_state import (
+    ApplicationStatus, PendingState, ShortlistedState, AcceptedState, RejectedState
+)
 from App.controllers import (
     create_user,
     get_all_users_json,
@@ -81,6 +84,98 @@ class UserUnitTests(unittest.TestCase):
         password = "mypass"
         user = User("bob", password, "student")
         assert user.check_password(password)
+
+
+class ApplicationStateUnitTests(unittest.TestCase):
+    """Unit tests for ApplicationState pattern"""
+
+    # PendingState tests
+    def test_pending_state_initial_status(self):
+        state = PendingState()
+        assert state.current_status == ApplicationStatus.PENDING
+
+    def test_pending_to_shortlisted(self):
+        state = PendingState()
+        new_state = state.shortlist()
+        assert isinstance(new_state, ShortlistedState)
+        assert new_state.current_status == ApplicationStatus.SHORTLISTED
+
+    def test_pending_to_accepted(self):
+        state = PendingState()
+        new_state = state.accept()
+        assert isinstance(new_state, AcceptedState)
+        assert new_state.current_status == ApplicationStatus.ACCEPTED
+
+    def test_pending_to_rejected(self):
+        state = PendingState()
+        new_state = state.reject()
+        assert isinstance(new_state, RejectedState)
+        assert new_state.current_status == ApplicationStatus.REJECTED
+
+    # ShortlistedState tests
+    def test_shortlisted_state_initial_status(self):
+        state = ShortlistedState()
+        assert state.current_status == ApplicationStatus.SHORTLISTED
+
+    def test_shortlisted_to_accepted(self):
+        state = ShortlistedState()
+        new_state = state.accept()
+        assert isinstance(new_state, AcceptedState)
+        assert new_state.current_status == ApplicationStatus.ACCEPTED
+
+    def test_shortlisted_to_rejected(self):
+        state = ShortlistedState()
+        new_state = state.reject()
+        assert isinstance(new_state, RejectedState)
+        assert new_state.current_status == ApplicationStatus.REJECTED
+
+    def test_shortlisted_shortlist_noop(self):
+        state = ShortlistedState()
+        new_state = state.shortlist()
+        assert new_state is state  # Returns self
+
+    # AcceptedState tests
+    def test_accepted_state_initial_status(self):
+        state = AcceptedState()
+        assert state.current_status == ApplicationStatus.ACCEPTED
+
+    def test_accepted_accept_noop(self):
+        state = AcceptedState()
+        new_state = state.accept()
+        assert new_state is state  # Returns self
+
+    def test_accepted_shortlist_noop(self):
+        state = AcceptedState()
+        new_state = state.shortlist()
+        assert new_state is state  # Returns self
+
+    def test_accepted_to_rejected(self):
+        state = AcceptedState()
+        new_state = state.reject()
+        assert isinstance(new_state, RejectedState)
+        assert new_state.current_status == ApplicationStatus.REJECTED
+
+    # RejectedState tests
+    def test_rejected_state_initial_status(self):
+        state = RejectedState()
+        assert state.current_status == ApplicationStatus.REJECTED
+
+    def test_rejected_reject_noop(self):
+        state = RejectedState()
+        new_state = state.reject()
+        assert new_state is state  # Returns self
+
+    def test_rejected_accept_noop(self):
+        state = RejectedState()
+        new_state = state.accept()
+        assert new_state is state  # Returns self
+
+    def test_rejected_to_shortlisted(self):
+        state = RejectedState()
+        new_state = state.shortlist()
+        assert isinstance(new_state, ShortlistedState)
+        assert new_state.current_status == ApplicationStatus.SHORTLISTED
+
 
 '''
     Integration Tests
