@@ -3,6 +3,8 @@ from App.models.application_state import (ApplicationState, ApplicationStatus, P
 
 from sqlalchemy import Enum
 
+__all__ = ['Application']
+
 class Application(db.Model):
     __tablename__ = 'application'
 
