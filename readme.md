@@ -56,7 +56,7 @@ in configuration information via environment tab of your render project's dashbo
 
 # Flask Commands
 
-wsgi.py is a utility script for performing various tasks related to the project. You can use it to import and test any code in the project. 
+wsgi.py is a utility script for performing various tasks related to the project. You can use it to import and test any code in the project.
 You just need create a manager command function, for example:
 
 ```python
@@ -206,12 +206,6 @@ If you are adding models you may need to migrate the database with the commands 
 
     Staff member add a student to a position's shortlist
 
-## flask user decide_shortlist "student_id" "position_id"
-    student_id: Id of Student
-    position_id: Id of Position
-
-    Employer either accepts or rejects a student from the shortlist
-
 ## flask user get_shortlist "student_id"
     student_id: Id of Student
 
@@ -226,4 +220,4 @@ If you are adding models you may need to migrate the database with the commands 
     employer_id: Id of employer
 
     Retrives the postiotns created from a given employer
-        
+

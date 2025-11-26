@@ -19,7 +19,7 @@ from App.controllers import (
     get_positions_by_employer,
     add_student_to_shortlist,
     get_shortlist_by_student,
-    decide_shortlist
+    accept_application,
 )
 
 
@@ -181,7 +181,7 @@ class ApplicationStateUnitTests(unittest.TestCase):
 @pytest.fixture(autouse=True, scope="function")
 def empty_db():
     app = create_app({'TESTING': True, 'SQLALCHEMY_DATABASE_URI': 'sqlite:///test.db'})
-    
+
     with app.app_context():
         create_db()
         yield app.test_client()
@@ -191,9 +191,9 @@ def empty_db():
 class UserIntegrationTests(unittest.TestCase):
 
     def test_create_user(self):
-        
+
         staff = create_user("rick", "bobpass", "staff")
-        assert staff.username == "rick" 
+        assert staff.username == "rick"
 
         employer = create_user("sam", "sampass", "employer")
         assert employer.username == "sam"
@@ -210,7 +210,7 @@ class UserIntegrationTests(unittest.TestCase):
       #  update_user(1, "ronnie")
       #  user = get_user(1)
        # assert user.username == "ronnie"
-        
+
     def test_open_position(self):
         position_count = 2
         employer = create_user("sally", "sallypass", "employer")
@@ -256,15 +256,14 @@ class UserIntegrationTests(unittest.TestCase):
         assert position is not None
         stud_application = add_student_to_shortlist(student.id, position.id, staff.id)
         assert stud_application
-        decided_application = decide_shortlist(student.id, position.id, "accepted")
-        assert decided_application
+        assert stud_application.status == ApplicationStatus.PENDING
+        accepted = accept_application(stud_application.id)
+        assert accepted is not None
+        assert accepted.status == ApplicationStatus.ACCEPTED
+        assert position.number_of_positions == (position_count - 1)
         applications = get_shortlist_by_student(student.id)
         assert any(s.status == ApplicationStatus.ACCEPTED for s in applications)
-        assert position.number_of_positions == (position_count - 1)
         assert len(applications) > 0
-        invalid_decision = decide_shortlist(-1, -1, "accepted")
-        assert invalid_decision is False
-
 
     def test_student_view_applications(self):
         student = create_user("john", "johnpass", "student")

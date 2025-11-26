@@ -12,7 +12,6 @@ __all__ = [
     'get_application',
     'add_student_to_shortlist',
     'get_shortlist_by_student',
-    'decide_shortlist',
 ]
 
 def create_application(student_id, position_id, staff_id):
@@ -55,6 +54,9 @@ def accept_application(application_id):
     if not application:
         return None
     application.accept()
+    position = db.session.get(Position, application.position_id)
+    if position and position.number_of_positions > 0:
+        position.number_of_positions -= 1
     db.session.commit()
     return application
 
@@ -105,38 +107,3 @@ def get_shortlist_by_student(student_id):
     if student_profile:
         return get_applications_by_student(student_profile.id)
     return get_applications_by_student(student_id)
-
-
-def decide_shortlist(student_id, position_id, decision):
-    """Decide an application by student+position.
-
-    decision: 'accepted' or 'rejected' (case-insensitive)
-    Returns the updated application or False on invalid input.
-    """
-    # Resolve student profile if a User.id was provided
-    student_profile = db.session.query(Student).filter_by(user_id=student_id).first()
-    student_lookup_id = student_profile.id if student_profile else student_id
-
-    application = db.session.query(Application).filter_by(
-        student_id=student_lookup_id,
-        position_id=position_id
-    ).first()
-    if not application:
-        return False
-
-    decision_norm = (decision or "").strip().lower()
-    position = db.session.get(Position, position_id)
-
-    if decision_norm == 'accepted':
-        application.accept()
-        # decrement available positions where applicable
-        if position and getattr(position, 'number_of_positions', 0) > 0:
-            position.number_of_positions = position.number_of_positions - 1
-        db.session.commit()
-        return application
-    elif decision_norm == 'rejected':
-        application.reject()
-        db.session.commit()
-        return application
-
-    return False
