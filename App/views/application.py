@@ -10,8 +10,6 @@ from App.controllers import (
     get_application,
     require_role
 )
-from App.controllers import require_role
-
 application_views = Blueprint('application_views', __name__)
 
 
