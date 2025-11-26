@@ -60,7 +60,7 @@ class UserUnitTests(unittest.TestCase):
         assert position.status == PositionStatus.open
         assert position.number_of_positions == 5
 
-    def test_new_appliction(self):
+    def test_new_application(self):
         application = Application(student_id=1, position_id=2, staff_id=3)
         assert application.student_id == 1
         assert application.position_id == 2
