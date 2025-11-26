@@ -39,6 +39,7 @@ def get_application_by_id(id):
 
 
 @application_views.route('/api/application/student/<int:student_id>', methods=['GET'])
+@jwt_required()
 @require_role('employer')
 def get_application_by_student(student_id):
     applications = get_applications_by_student(student_id)
