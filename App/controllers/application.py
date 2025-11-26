@@ -1,5 +1,4 @@
 from App.models import Application, Position, Staff, Student
-from App.models.application_state import ApplicationStatus
 from App.database import db
 
 def create_application(student_id, position_id, staff_id):
