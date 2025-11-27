@@ -3,7 +3,7 @@ from App.models.position import PositionStatus
 from App.database import db
 
 def open_position(user_id, title, number_of_positions=1, description=None):
-    employer = db.session.get(Employer, user_id)
+    employer = Employer.query.filter_by(user_id=user_id).first()
     if not employer:
         return None
 
