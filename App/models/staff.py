@@ -1,12 +1,13 @@
 from App.database import db
 from App.models.user import User
 
-class Staff(db.Model):
+class Staff(User):
     __tablename__ = 'staff'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, unique=True)
-    username = db.Column(db.String(20), nullable=False, unique=True)
+    id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
 
-    def __init__(self, username, user_id):
-        self.username = username
-        self.user_id = user_id
+    __mapper_args__ = {
+        'polymorphic_identity': 'staff'
+    }
+
+    def __init__(self, username, password):
+        super().__init__(username, password, 'staff')

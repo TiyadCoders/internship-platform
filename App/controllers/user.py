@@ -3,22 +3,16 @@ from App.database import db
 
 def create_user(username, password, user_type):
     try:
-        newuser = User(username=username, password=password, role=user_type)
-        db.session.add(newuser)
-        db.session.flush()
-
         if user_type == "student":
-            profile = Student(username=username, user_id=newuser.id)
-            db.session.add(profile)
+            newuser = Student(username=username, password=password)
         elif user_type == "employer":
-            profile = Employer(username=username, user_id=newuser.id)
-            db.session.add(profile)
+            newuser = Employer(username=username, password=password)
         elif user_type == "staff":
-            profile = Staff(username=username, user_id=newuser.id)
-            db.session.add(profile)
+            newuser = Staff(username=username, password=password)
         else:
             return None
-
+        
+        db.session.add(newuser)
         db.session.commit()
         return newuser
     except Exception as e:
