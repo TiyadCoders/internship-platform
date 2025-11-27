@@ -270,6 +270,17 @@ def empty_db():
 
 
 class UserIntegrationTests(unittest.TestCase):
+    def test_position_with_and_without_description(self):
+        employer = create_user("descemp", "descpass", "employer")
+        assert employer is not None
+        # With description
+        pos_with_desc = open_position(user_id=employer.id, title="Described Position", number_of_positions=1, description="A position with a description")
+        assert pos_with_desc is not None
+        assert pos_with_desc.description == "A position with a description"
+        # Without description
+        pos_without_desc = open_position(user_id=employer.id, title="No Description Position", number_of_positions=1)
+        assert pos_without_desc is not None
+        assert pos_without_desc.description is None
 
     def test_create_user(self):
         # Create a company first for staff and employer
@@ -358,6 +369,15 @@ class UserIntegrationTests(unittest.TestCase):
         assert employer is not None
         assert hasattr(employer, 'positions')
         assert isinstance(employer.positions, list)
+
+    def test_new_position(self):
+        employer = create_user("sally", "sallypass", "employer")
+        assert employer is not None
+        position = open_position(user_id=employer.id, title="IT Support", number_of_positions=2, description="Help with IT issues")
+        assert position is not None
+        assert position.title == "IT Support"
+        assert position.number_of_positions == 2
+        assert position.description == "Help with IT issues"
 
     def test_open_position(self):
         # Create a company first for employer
