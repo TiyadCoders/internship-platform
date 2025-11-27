@@ -36,22 +36,82 @@ class UserUnitTests(unittest.TestCase):
         assert user.role == "student"
 
     def test_new_student(self):
-        # Student model takes (username, user_id) - it's linked to User
-        student = Student("john", user_id=1)
+        # Student now inherits from User and takes (username, password)
+        student = Student("john", "johnpass")
         assert student.username == "john"
-        assert student.user_id == 1
+        assert student.role == "student"  # Should be set automatically
+        assert isinstance(student, User)  # Should be instance of User
+        assert isinstance(student, Student)  # Should be instance of Student
 
     def test_new_staff(self):
-        # Staff model takes (username, user_id) - it's linked to User
-        staff = Staff("jim", user_id=1)
+        # Staff now inherits from User and takes (username, password)
+        staff = Staff("jim", "jimpass")
         assert staff.username == "jim"
-        assert staff.user_id == 1
+        assert staff.role == "staff"  # Should be set automatically
+        assert isinstance(staff, User)  # Should be instance of User
+        assert isinstance(staff, Staff)  # Should be instance of Staff
 
     def test_new_employer(self):
-        # Employer model takes (username, user_id) - it's linked to User
-        employer = Employer("alice", user_id=1)
+        # Employer now inherits from User and takes (username, password)
+        employer = Employer("alice", "alicepass")
         assert employer.username == "alice"
-        assert employer.user_id == 1
+        assert employer.role == "employer"  # Should be set automatically
+        assert isinstance(employer, User)  # Should be instance of User
+        assert isinstance(employer, Employer)  # Should be instance of Employer
+
+    def test_inheritance_chain(self):
+        # Test that all subclasses properly inherit from User
+        student = Student("student1", "pass1")
+        staff = Staff("staff1", "pass2")
+        employer = Employer("employer1", "pass3")
+
+        # All should be instances of User
+        assert isinstance(student, User)
+        assert isinstance(staff, User)
+        assert isinstance(employer, User)
+
+        # All should have User methods
+        assert hasattr(student, 'check_password')
+        assert hasattr(staff, 'check_password')
+        assert hasattr(employer, 'check_password')
+
+        assert hasattr(student, 'get_json')
+        assert hasattr(staff, 'get_json')
+        assert hasattr(employer, 'get_json')
+
+    def test_polymorphic_identity(self):
+        # Test that role is set correctly via polymorphic identity
+        student = Student("student1", "pass1")
+        staff = Staff("staff1", "pass2")
+        employer = Employer("employer1", "pass3")
+
+        assert student.role == "student"
+        assert staff.role == "staff"
+        assert employer.role == "employer"
+
+    def test_student_inherits_password_methods(self):
+        # Test that Student inherits password methods from User
+        password = "mypass"
+        student = Student("john", password)
+        assert student.password != password  # Should be hashed
+        assert student.check_password(password)  # Should validate correctly
+        assert not student.check_password("wrongpass")  # Should reject wrong password
+
+    def test_staff_inherits_password_methods(self):
+        # Test that Staff inherits password methods from User
+        password = "staffpass"
+        staff = Staff("jane", password)
+        assert staff.password != password  # Should be hashed
+        assert staff.check_password(password)  # Should validate correctly
+        assert not staff.check_password("wrongpass")  # Should reject wrong password
+
+    def test_employer_inherits_password_methods(self):
+        # Test that Employer inherits password methods from User
+        password = "emppass"
+        employer = Employer("alice", password)
+        assert employer.password != password  # Should be hashed
+        assert employer.check_password(password)  # Should validate correctly
+        assert not employer.check_password("wrongpass")  # Should reject wrong password
 
     def test_new_position(self):
         position = Position("Software Developer", 10, 5)
@@ -73,6 +133,20 @@ class UserUnitTests(unittest.TestCase):
         user_json = user.get_json()
         self.assertEqual(user_json["username"], "bob")
         self.assertTrue("id" in user.get_json())
+
+    def test_get_json_inherited(self):
+        # Test that subclasses can use inherited get_json method
+        student = Student("john", "johnpass")
+        staff = Staff("jane", "janepass")
+        employer = Employer("alice", "alicepass")
+
+        student_json = student.get_json()
+        staff_json = staff.get_json()
+        employer_json = employer.get_json()
+
+        assert student_json["username"] == "john"
+        assert staff_json["username"] == "jane"
+        assert employer_json["username"] == "alice"
 
     def test_hashed_password(self):
         password = "mypass"
@@ -192,11 +266,15 @@ class UserIntegrationTests(unittest.TestCase):
 
     def test_create_user(self):
 
+        # Test that create_user creates the correct subclass instances
         staff = create_user("rick", "bobpass", "staff")
         assert staff.username == "rick"
 
         employer = create_user("sam", "sampass", "employer")
         assert employer.username == "sam"
+        assert employer.role == "employer"
+        assert isinstance(employer, Employer)
+        assert isinstance(employer, User)
 
         student = create_user("hannah", "hannahpass", "student")
         assert student.username == "hannah"
@@ -211,10 +289,63 @@ class UserIntegrationTests(unittest.TestCase):
       #  user = get_user(1)
        # assert user.username == "ronnie"
 
+        assert student.role == "student"
+        assert isinstance(student, Student)
+        assert isinstance(student, User)
+
+    def test_polymorphic_query(self):
+        # Test that querying User returns appropriate subclass instances
+        staff = create_user("rick", "bobpass", "staff")
+        employer = create_user("sam", "sampass", "employer")
+        student = create_user("hannah", "hannahpass", "student")
+
+        # Query by user ID should return the correct subclass
+        queried_staff = db.session.get(User, staff.id)
+        queried_employer = db.session.get(User, employer.id)
+        queried_student = db.session.get(User, student.id)
+
+        assert isinstance(queried_staff, Staff)
+        assert isinstance(queried_employer, Employer)
+        assert isinstance(queried_student, Student)
+
+        # All should still be instances of User
+        assert isinstance(queried_staff, User)
+        assert isinstance(queried_employer, User)
+        assert isinstance(queried_student, User)
+
+    def test_query_by_subclass(self):
+        # Test that querying by subclass only returns instances of that subclass
+        create_user("rick", "bobpass", "staff")
+        create_user("sam", "sampass", "employer")
+        create_user("hannah", "hannahpass", "student")
+
+        # Query specific subclasses
+        all_staff = Staff.query.all()
+        all_employers = Employer.query.all()
+        all_students = Student.query.all()
+
+        assert len(all_staff) == 1
+        assert len(all_employers) == 1
+        assert len(all_students) == 1
+
+        # Verify they are the correct types
+        assert all(isinstance(s, Staff) for s in all_staff)
+        assert all(isinstance(e, Employer) for e in all_employers)
+        assert all(isinstance(s, Student) for s in all_students)
+
+    def test_user_relationships_after_inheritance(self):
+        # Test that relationships still work correctly after inheritance
+        employer = create_user("sam", "sampass", "employer")
+        assert employer is not None
+        assert hasattr(employer, 'positions')
+        assert isinstance(employer.positions, list)
+
     def test_open_position(self):
         position_count = 2
         employer = create_user("sally", "sallypass", "employer")
         assert employer is not None
+        assert isinstance(employer, Employer)
+
         position = open_position(user_id=employer.id, title="IT Support", number_of_positions=position_count)
         positions = get_positions_by_employer(employer.id)
         assert position is not None
@@ -230,10 +361,16 @@ class UserIntegrationTests(unittest.TestCase):
         position_count = 3
         staff = create_user("linda", "lindapass", "staff")
         assert staff is not None
+        assert isinstance(staff, Staff)
+
         student = create_user("hank", "hankpass", "student")
         assert student is not None
+        assert isinstance(student, Student)
+
         employer = create_user("ken", "kenpass", "employer")
         assert employer is not None
+        assert isinstance(employer, Employer)
+
         position = open_position(user_id=employer.id, title="Database Manager", number_of_positions=position_count)
         invalid_position = open_position(user_id=-1, title="Developer", number_of_positions=1)
         assert invalid_position is None
@@ -248,30 +385,45 @@ class UserIntegrationTests(unittest.TestCase):
         position_count = 3
         student = create_user("jack", "jackpass", "student")
         assert student is not None
+        assert isinstance(student, Student)
+
         staff = create_user("pat", "patpass", "staff")
         assert staff is not None
+        assert isinstance(staff, Staff)
+
         employer = create_user("frank", "pass", "employer")
         assert employer is not None
+        assert isinstance(employer, Employer)
+
         position = open_position(user_id=employer.id, title="Intern", number_of_positions=position_count)
         assert position is not None
+
         stud_application = add_student_to_shortlist(student.id, position.id, staff.id)
         assert stud_application
+
         assert stud_application.status == ApplicationStatus.PENDING
         accepted = accept_application(stud_application.id)
+
         assert accepted is not None
         assert accepted.status == ApplicationStatus.ACCEPTED
         assert position.number_of_positions == (position_count - 1)
         applications = get_shortlist_by_student(student.id)
+
         assert any(s.status == ApplicationStatus.ACCEPTED for s in applications)
         assert len(applications) > 0
-
     def test_student_view_applications(self):
         student = create_user("john", "johnpass", "student")
         assert student is not None
+        assert isinstance(student, Student)
+
         staff = create_user("tim", "timpass", "staff")
         assert staff is not None
+        assert isinstance(staff, Staff)
+
         employer = create_user("joe", "joepass", "employer")
         assert employer is not None
+        assert isinstance(employer, Employer)
+
         position = open_position(user_id=employer.id, title="Software Intern", number_of_positions=4)
         assert position is not None
         application = add_student_to_shortlist(student.id, position.id, staff.id)
@@ -279,9 +431,42 @@ class UserIntegrationTests(unittest.TestCase):
         assert any(application.id == s.id for s in applications)
         assert len(applications) > 0
 
-    # Tests data changes in the database
-    #def test_update_user(self):
-    #    update_user(1, "ronnie")
-    #   user = get_user(1)
-    #   assert user.username == "ronnie"
+    def test_no_duplicate_usernames_across_subclasses(self):
+        # Test that username uniqueness is enforced across all User subclasses
+        create_user("john", "pass1", "student")
 
+        # Trying to create another user with same username should fail
+        duplicate_staff = create_user("john", "pass2", "staff")
+        assert duplicate_staff is None
+
+    def test_login_works_with_inheritance(self):
+        # Test that login still works correctly with inheritance
+        student = create_user("john", "johnpass", "student")
+        assert student is not None
+
+        # Login should return a token
+        token = login("john", "johnpass")
+        assert token is not None
+
+        # Login with wrong password should fail
+        token = login("john", "wrongpass")
+        assert token is None
+
+    def test_get_user_returns_correct_subclass(self):
+        # Test that get_user returns the correct subclass instance
+        student = create_user("john", "johnpass", "student")
+        staff = create_user("jane", "janepass", "staff")
+        employer = create_user("joe", "joepass", "employer")
+
+        retrieved_student = get_user(student.id)
+        retrieved_staff = get_user(staff.id)
+        retrieved_employer = get_user(employer.id)
+
+        assert isinstance(retrieved_student, Student)
+        assert isinstance(retrieved_staff, Staff)
+        assert isinstance(retrieved_employer, Employer)
+
+        # All should still be instances of User
+        assert isinstance(retrieved_student, User)
+        assert isinstance(retrieved_staff, User)
+        assert isinstance(retrieved_employer, User)

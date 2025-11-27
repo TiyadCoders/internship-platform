@@ -85,25 +85,11 @@ def get_application(application_id):
 # Compatibility wrappers for legacy function names used in tests and other modules
 def add_student_to_shortlist(student_id, position_id, staff_id):
     """Alias for create_application kept for backwards compatibility."""
-    # The tests pass the User.id (not Student.id), so try to resolve a Student record
-    # If student_id is a User id, find the Student profile with user_id == student_id
-    student_profile = db.session.query(Student).filter_by(user_id=student_id).first()
-    if student_profile:
-        resolved_student_id = student_profile.id
-    else:
-        resolved_student_id = student_id
-
-    # Resolve staff similarly if a User.id is provided
-    staff_profile = db.session.query(Staff).filter_by(user_id=staff_id).first()
-    resolved_staff_id = staff_profile.id if staff_profile else staff_id
-
-    return create_application(resolved_student_id, position_id, resolved_staff_id)
+    # With joined table inheritance, Student.id == User.id, so we can use the id directly
+    return create_application(student_id, position_id, staff_id)
 
 
 def get_shortlist_by_student(student_id):
     """Alias for get_applications_by_student kept for backwards compatibility."""
-    # Accept either User.id (resolve to Student) or Student.id
-    student_profile = db.session.query(Student).filter_by(user_id=student_id).first()
-    if student_profile:
-        return get_applications_by_student(student_profile.id)
+    # With joined table inheritance, Student.id == User.id, so we can use the id directly
     return get_applications_by_student(student_id)
