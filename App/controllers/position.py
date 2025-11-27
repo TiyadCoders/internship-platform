@@ -2,12 +2,12 @@ from App.models import Position, Employer
 from App.models.position import PositionStatus
 from App.database import db
 
-def open_position(user_id, title, number_of_positions=1):
-    employer = Employer.query.filter_by(id=user_id).first()
+def open_position(user_id, title, number_of_positions=1, description=None):
+    employer = Employer.query.filter_by(user_id=user_id).first()
     if not employer:
         return None
 
-    new_position = Position(title=title, number=number_of_positions, employer_id=employer.id)
+    new_position = Position(title=title, number=number_of_positions, employer_id=employer.id, description=description)
     db.session.add(new_position)
     try:
         db.session.commit()
