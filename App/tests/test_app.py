@@ -6,7 +6,7 @@ from App.database import db, create_db
 from App.models import User, Employer, Position, Application, Staff, Student, Company
 from App.models.position import PositionStatus
 from App.models.application_state import (
-    ApplicationStatus, PendingState, AcceptedState, RejectedState, ShortlistedState
+    ApplicationStatus, PendingState, AcceptedState, RejectedState, ShortlistedState, WithdrawnState
 )
 from App.controllers import (
     create_user,
@@ -20,6 +20,9 @@ from App.controllers import (
     add_student_to_shortlist,
     get_shortlist_by_student,
     accept_application,
+    withdraw_application,
+    shortlist_application,
+    reject_application,
     create_company,
     get_company,
     get_all_companies,
@@ -128,10 +131,10 @@ class UserUnitTests(unittest.TestCase):
         assert position.number_of_positions == 5
 
     def test_new_application(self):
-        application = Application(student_id=1, position_id=2, staff_id=3)
+        application = Application(student_id=1, position_id=2, updated_by=3)
         assert application.student_id == 1
         assert application.position_id == 2
-        assert application.staff_id == 3
+        assert application.updated_by == 3
         assert application.status == ApplicationStatus.PENDING
 
     # pure function no side effects or integrations called
@@ -252,6 +255,59 @@ class ApplicationStateUnitTests(unittest.TestCase):
         assert isinstance(new_state, ShortlistedState)
         assert new_state.current_status == ApplicationStatus.SHORTLISTED
 
+    # WithdrawnState tests
+    def test_withdrawn_state_initial_status(self):
+        state = WithdrawnState()
+        assert state.current_status == ApplicationStatus.WITHDRAWN
+
+    def test_withdrawn_shortlist_noop(self):
+        state = WithdrawnState()
+        new_state = state.shortlist()
+        assert new_state is state  # Returns self - cannot shortlist withdrawn
+
+    def test_withdrawn_accept_noop(self):
+        state = WithdrawnState()
+        new_state = state.accept()
+        assert new_state is state  # Returns self - cannot accept withdrawn
+
+    def test_withdrawn_reject_noop(self):
+        state = WithdrawnState()
+        new_state = state.reject()
+        assert new_state is state  # Returns self - cannot reject withdrawn
+
+    def test_withdrawn_withdraw_noop(self):
+        state = WithdrawnState()
+        new_state = state.withdraw()
+        assert new_state is state  # Returns self - already withdrawn
+
+    def test_withdrawn_available_actions_empty(self):
+        state = WithdrawnState()
+        assert state.get_available_actions() == []
+
+    # Withdraw transitions from other states
+    def test_pending_to_withdrawn(self):
+        state = PendingState()
+        new_state = state.withdraw()
+        assert isinstance(new_state, WithdrawnState)
+        assert new_state.current_status == ApplicationStatus.WITHDRAWN
+
+    def test_shortlisted_to_withdrawn(self):
+        state = ShortlistedState()
+        new_state = state.withdraw()
+        assert isinstance(new_state, WithdrawnState)
+        assert new_state.current_status == ApplicationStatus.WITHDRAWN
+
+    def test_rejected_to_withdrawn(self):
+        state = RejectedState()
+        new_state = state.withdraw()
+        assert isinstance(new_state, WithdrawnState)
+        assert new_state.current_status == ApplicationStatus.WITHDRAWN
+
+    def test_accepted_withdraw_noop(self):
+        state = AcceptedState()
+        new_state = state.withdraw()
+        assert new_state is state  # Returns self - cannot withdraw accepted
+
 
 '''
     Integration Tests
@@ -271,7 +327,8 @@ def empty_db():
 
 class UserIntegrationTests(unittest.TestCase):
     def test_position_with_and_without_description(self):
-        employer = create_user("descemp", "descpass", "employer")
+        company = create_company("Test Company", "A test company")
+        employer = create_user("descemp", "descpass", "employer", company_id=company.id)
         assert employer is not None
         # With description
         pos_with_desc = open_position(user_id=employer.id, title="Described Position", number_of_positions=1, description="A position with a description")
@@ -371,7 +428,8 @@ class UserIntegrationTests(unittest.TestCase):
         assert isinstance(employer.positions, list)
 
     def test_new_position(self):
-        employer = create_user("sally", "sallypass", "employer")
+        company = create_company("Test Company", "A test company")
+        employer = create_user("sally", "sallypass", "employer", company_id=company.id)
         assert employer is not None
         position = open_position(user_id=employer.id, title="IT Support", number_of_positions=2, description="Help with IT issues")
         assert position is not None
@@ -614,3 +672,145 @@ class CompanyIntegrationTests(unittest.TestCase):
         assert len(json_data['employers']) == 1
         assert json_data['staff'][0]['username'] == "json_staff"
         assert json_data['employers'][0]['username'] == "json_employer"
+
+
+class ApplicationIntegrationTests(unittest.TestCase):
+    """Integration tests for Application functionality including authorization"""
+
+    def test_withdraw_application_success(self):
+        """Test that a student can withdraw their own application."""
+        company = create_company("Test Company", "A test company")
+        student = create_user("withdraw_student", "pass", "student")
+        employer = create_user("withdraw_employer", "pass", "employer", company_id=company.id)
+        position = open_position(user_id=employer.id, title="Test Position", number_of_positions=2)
+
+        application = add_student_to_shortlist(student.id, position.id)
+        assert application is not None
+        assert application.status == ApplicationStatus.PENDING
+
+        result = withdraw_application(application.id)
+        assert result is not None
+        assert result.status == ApplicationStatus.WITHDRAWN
+
+    def test_cannot_withdraw_accepted_application(self):
+        """Test that an accepted application cannot be withdrawn."""
+        company = create_company("Test Company", "A test company")
+        student = create_user("accepted_student", "pass", "student")
+        employer = create_user("accepted_employer", "pass", "employer", company_id=company.id)
+        position = open_position(user_id=employer.id, title="Test Position", number_of_positions=2)
+
+        application = add_student_to_shortlist(student.id, position.id)
+        accept_application(application.id)
+
+        result = withdraw_application(application.id)
+        assert isinstance(result, dict)
+        assert 'error' in result
+
+    def test_staff_cannot_accept_withdrawn_application(self):
+        """Test that staff cannot accept a withdrawn application."""
+        company = create_company("Test Company", "A test company")
+        student = create_user("withdrawn_student", "pass", "student")
+        employer = create_user("withdrawn_employer", "pass", "employer", company_id=company.id)
+        position = open_position(user_id=employer.id, title="Test Position", number_of_positions=2)
+
+        application = add_student_to_shortlist(student.id, position.id)
+        withdraw_application(application.id)
+
+        result = accept_application(application.id)
+        assert isinstance(result, dict)
+        assert 'error' in result
+        assert result['application'].status == ApplicationStatus.WITHDRAWN
+
+    def test_staff_cannot_shortlist_withdrawn_application(self):
+        """Test that staff cannot shortlist a withdrawn application."""
+        company = create_company("Test Company", "A test company")
+        student = create_user("shortlist_student", "pass", "student")
+        employer = create_user("shortlist_employer", "pass", "employer", company_id=company.id)
+        position = open_position(user_id=employer.id, title="Test Position", number_of_positions=2)
+
+        application = add_student_to_shortlist(student.id, position.id)
+        withdraw_application(application.id)
+
+        result = shortlist_application(application.id)
+        assert isinstance(result, dict)
+        assert 'error' in result
+
+    def test_staff_cannot_reject_withdrawn_application(self):
+        """Test that staff cannot reject a withdrawn application."""
+        company = create_company("Test Company", "A test company")
+        student = create_user("reject_student", "pass", "student")
+        employer = create_user("reject_employer", "pass", "employer", company_id=company.id)
+        position = open_position(user_id=employer.id, title="Test Position", number_of_positions=2)
+
+        application = add_student_to_shortlist(student.id, position.id)
+        withdraw_application(application.id)
+
+        result = reject_application(application.id)
+        assert isinstance(result, dict)
+        assert 'error' in result
+
+    def test_no_duplicate_applications(self):
+        """Test that a student cannot apply twice to the same position."""
+        company = create_company("Test Company", "A test company")
+        student = create_user("dup_student", "pass", "student")
+        employer = create_user("dup_employer", "pass", "employer", company_id=company.id)
+        position = open_position(user_id=employer.id, title="Test Position", number_of_positions=2)
+
+        first_app = add_student_to_shortlist(student.id, position.id)
+        assert first_app is not None
+
+        # Try to create duplicate application
+        duplicate_app = add_student_to_shortlist(student.id, position.id)
+        assert duplicate_app is None
+
+    def test_application_available_actions_pending(self):
+        """Test available actions for pending application."""
+        company = create_company("Test Company", "A test company")
+        student = create_user("actions_student", "pass", "student")
+        employer = create_user("actions_employer", "pass", "employer", company_id=company.id)
+        position = open_position(user_id=employer.id, title="Test Position", number_of_positions=2)
+
+        application = add_student_to_shortlist(student.id, position.id)
+        actions = application.get_available_actions()
+
+        assert 'shortlist' in actions
+        assert 'accept' in actions
+        assert 'reject' in actions
+        assert 'withdraw' in actions
+
+    def test_application_available_actions_withdrawn(self):
+        """Test that withdrawn applications have no available actions."""
+        company = create_company("Test Company", "A test company")
+        student = create_user("withdrawn_actions", "pass", "student")
+        employer = create_user("withdrawn_actions_emp", "pass", "employer", company_id=company.id)
+        position = open_position(user_id=employer.id, title="Test Position", number_of_positions=2)
+
+        application = add_student_to_shortlist(student.id, position.id)
+        withdraw_application(application.id)
+
+        # Refresh from database
+        from App.controllers import get_application
+        application = get_application(application.id)
+        actions = application.get_available_actions()
+
+        assert actions == []
+
+    def test_application_available_actions_accepted(self):
+        """Test available actions for accepted application."""
+        company = create_company("Test Company", "A test company")
+        student = create_user("accepted_actions", "pass", "student")
+        employer = create_user("accepted_actions_emp", "pass", "employer", company_id=company.id)
+        position = open_position(user_id=employer.id, title="Test Position", number_of_positions=2)
+
+        application = add_student_to_shortlist(student.id, position.id)
+        accept_application(application.id)
+
+        # Refresh from database
+        from App.controllers import get_application
+        application = get_application(application.id)
+        actions = application.get_available_actions()
+
+        assert 'reject' in actions
+        assert 'shortlist' not in actions
+        assert 'accept' not in actions
+        assert 'withdraw' not in actions

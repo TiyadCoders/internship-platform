@@ -15,4 +15,4 @@ def initialize():
     create_user('john', 'johnpass', "staff", company_id=company.id)
     open_position(user_id=2, title='Software Engineer', number_of_positions=6)
     open_position(user_id=2, title='Mechanical Engineer', number_of_positions=6)
-    create_application(student_id=1, position_id=1, staff_id=3)
+    create_application(student_id=1, position_id=1, updated_by=3)

@@ -8,6 +8,7 @@ __all__ = [
     'ShortlistedState',
     'AcceptedState',
     'RejectedState',
+    'WithdrawnState',
 ]
 
 class ApplicationStatus(Enum):
@@ -15,6 +16,7 @@ class ApplicationStatus(Enum):
     REJECTED = "rejected"
     ACCEPTED = "accepted"
     PENDING = "pending"
+    WITHDRAWN = "withdrawn"
 
 
 class ApplicationState(ABC):
@@ -49,6 +51,21 @@ class ApplicationState(ABC):
         """
         raise NotImplementedError
 
+    @abstractmethod
+    def withdraw(self):
+        """
+        Transition the application to the withdrawn state.
+        Returns a new ApplicationState instance representing the new state.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_available_actions(self) -> list[str]:
+        """
+        Returns a list of available actions for the current state.
+        """
+        raise NotImplementedError
+
 
 
 class ShortlistedState(ApplicationState):
@@ -78,6 +95,14 @@ class ShortlistedState(ApplicationState):
         """
         return AcceptedState()
 
+    def withdraw(self) -> ApplicationState:
+        """
+        Transition from shortlisted to withdrawn state.
+        """
+        return WithdrawnState()
+
+    def get_available_actions(self) -> list[str]:
+        return ['accept', 'reject', 'withdraw']
 
 
 class RejectedState(ApplicationState):
@@ -107,6 +132,14 @@ class RejectedState(ApplicationState):
         """
         return self  # Cannot accept a rejected application
 
+    def withdraw(self) -> ApplicationState:
+        """
+        Transition from rejected to withdrawn state.
+        """
+        return WithdrawnState()
+
+    def get_available_actions(self) -> list[str]:
+        return ['shortlist', 'withdraw']
 
 
 class AcceptedState(ApplicationState):
@@ -136,6 +169,14 @@ class AcceptedState(ApplicationState):
         """
         return self  # Already accepted
 
+    def withdraw(self) -> ApplicationState:
+        """
+        Cannot withdraw an accepted application; returns the same state.
+        """
+        return self  # Cannot withdraw an accepted application
+
+    def get_available_actions(self) -> list[str]:
+        return ['reject']
 
 
 class PendingState(ApplicationState):
@@ -164,4 +205,50 @@ class PendingState(ApplicationState):
         Transition from pending to accepted state.
         """
         return AcceptedState()
+
+    def withdraw(self) -> ApplicationState:
+        """
+        Transition from pending to withdrawn state.
+        """
+        return WithdrawnState()
+
+    def get_available_actions(self) -> list[str]:
+        return ['shortlist', 'accept', 'reject', 'withdraw']
+
+
+class WithdrawnState(ApplicationState):
+    """
+    Represents the 'withdrawn' state of an application.
+    A withdrawn application cannot be accepted, rejected, or shortlisted by staff.
+    """
+
+    def __init__(self):
+        self.current_status = ApplicationStatus.WITHDRAWN
+
+    def shortlist(self) -> ApplicationState:
+        """
+        Cannot shortlist a withdrawn application; returns the same state.
+        """
+        return self  # Cannot shortlist a withdrawn application
+
+    def reject(self) -> ApplicationState:
+        """
+        Cannot reject a withdrawn application; returns the same state.
+        """
+        return self  # Cannot reject a withdrawn application
+
+    def accept(self) -> ApplicationState:
+        """
+        Cannot accept a withdrawn application; returns the same state.
+        """
+        return self  # Cannot accept a withdrawn application
+
+    def withdraw(self) -> ApplicationState:
+        """
+        Already withdrawn; returns the same state.
+        """
+        return self  # Already withdrawn
+
+    def get_available_actions(self) -> list[str]:
+        return []  # No actions available for withdrawn applications
 

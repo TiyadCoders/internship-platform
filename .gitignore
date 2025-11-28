@@ -4,6 +4,8 @@ __pycache__/
 
 # Ignore test database
 instance/test.db
+instance/temp-database.db
+instance/temp-database.db-journal
 
 # Ignore VS Code settings (optional)
 #.vscode/
