@@ -1,17 +1,21 @@
 from App.models import User, Student, Employer, Staff
 from App.database import db
 
-def create_user(username, password, user_type):
+def create_user(username, password, user_type, company_id=None):
     try:
         if user_type == "student":
             newuser = Student(username=username, password=password)
         elif user_type == "employer":
-            newuser = Employer(username=username, password=password)
+            if company_id is None:
+                return None
+            newuser = Employer(username=username, password=password, company_id=company_id)
         elif user_type == "staff":
-            newuser = Staff(username=username, password=password)
+            if company_id is None:
+                return None
+            newuser = Staff(username=username, password=password, company_id=company_id)
         else:
             return None
-        
+
         db.session.add(newuser)
         db.session.commit()
         return newuser

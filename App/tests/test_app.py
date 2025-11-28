@@ -3,7 +3,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from App.main import create_app
 from App.database import db, create_db
-from App.models import User, Employer, Position, Application, Staff, Student
+from App.models import User, Employer, Position, Application, Staff, Student, Company
 from App.models.position import PositionStatus
 from App.models.application_state import (
     ApplicationStatus, PendingState, AcceptedState, RejectedState, ShortlistedState
@@ -20,6 +20,11 @@ from App.controllers import (
     add_student_to_shortlist,
     get_shortlist_by_student,
     accept_application,
+    create_company,
+    get_company,
+    get_all_companies,
+    update_company,
+    delete_company,
 )
 
 
@@ -44,26 +49,28 @@ class UserUnitTests(unittest.TestCase):
         assert isinstance(student, Student)  # Should be instance of Student
 
     def test_new_staff(self):
-        # Staff now inherits from User and takes (username, password)
-        staff = Staff("jim", "jimpass")
+        # Staff now inherits from User and takes (username, password, company_id)
+        staff = Staff("jim", "jimpass", company_id=1)
         assert staff.username == "jim"
         assert staff.role == "staff"  # Should be set automatically
+        assert staff.company_id == 1
         assert isinstance(staff, User)  # Should be instance of User
         assert isinstance(staff, Staff)  # Should be instance of Staff
 
     def test_new_employer(self):
-        # Employer now inherits from User and takes (username, password)
-        employer = Employer("alice", "alicepass")
+        # Employer now inherits from User and takes (username, password, company_id)
+        employer = Employer("alice", "alicepass", company_id=1)
         assert employer.username == "alice"
         assert employer.role == "employer"  # Should be set automatically
+        assert employer.company_id == 1
         assert isinstance(employer, User)  # Should be instance of User
         assert isinstance(employer, Employer)  # Should be instance of Employer
 
     def test_inheritance_chain(self):
         # Test that all subclasses properly inherit from User
         student = Student("student1", "pass1")
-        staff = Staff("staff1", "pass2")
-        employer = Employer("employer1", "pass3")
+        staff = Staff("staff1", "pass2", company_id=1)
+        employer = Employer("employer1", "pass3", company_id=1)
 
         # All should be instances of User
         assert isinstance(student, User)
@@ -82,8 +89,8 @@ class UserUnitTests(unittest.TestCase):
     def test_polymorphic_identity(self):
         # Test that role is set correctly via polymorphic identity
         student = Student("student1", "pass1")
-        staff = Staff("staff1", "pass2")
-        employer = Employer("employer1", "pass3")
+        staff = Staff("staff1", "pass2", company_id=1)
+        employer = Employer("employer1", "pass3", company_id=1)
 
         assert student.role == "student"
         assert staff.role == "staff"
@@ -100,7 +107,7 @@ class UserUnitTests(unittest.TestCase):
     def test_staff_inherits_password_methods(self):
         # Test that Staff inherits password methods from User
         password = "staffpass"
-        staff = Staff("jane", password)
+        staff = Staff("jane", password, company_id=1)
         assert staff.password != password  # Should be hashed
         assert staff.check_password(password)  # Should validate correctly
         assert not staff.check_password("wrongpass")  # Should reject wrong password
@@ -108,7 +115,7 @@ class UserUnitTests(unittest.TestCase):
     def test_employer_inherits_password_methods(self):
         # Test that Employer inherits password methods from User
         password = "emppass"
-        employer = Employer("alice", password)
+        employer = Employer("alice", password, company_id=1)
         assert employer.password != password  # Should be hashed
         assert employer.check_password(password)  # Should validate correctly
         assert not employer.check_password("wrongpass")  # Should reject wrong password
@@ -137,8 +144,8 @@ class UserUnitTests(unittest.TestCase):
     def test_get_json_inherited(self):
         # Test that subclasses can use inherited get_json method
         student = Student("john", "johnpass")
-        staff = Staff("jane", "janepass")
-        employer = Employer("alice", "alicepass")
+        staff = Staff("jane", "janepass", company_id=1)
+        employer = Employer("alice", "alicepass", company_id=1)
 
         student_json = student.get_json()
         staff_json = staff.get_json()
@@ -265,12 +272,15 @@ def empty_db():
 class UserIntegrationTests(unittest.TestCase):
 
     def test_create_user(self):
+        # Create a company first for staff and employer
+        company = create_company("Test Company", "A test company")
+        assert company is not None
 
         # Test that create_user creates the correct subclass instances
-        staff = create_user("rick", "bobpass", "staff")
+        staff = create_user("rick", "bobpass", "staff", company_id=company.id)
         assert staff.username == "rick"
 
-        employer = create_user("sam", "sampass", "employer")
+        employer = create_user("sam", "sampass", "employer", company_id=company.id)
         assert employer.username == "sam"
         assert employer.role == "employer"
         assert isinstance(employer, Employer)
@@ -294,9 +304,12 @@ class UserIntegrationTests(unittest.TestCase):
         assert isinstance(student, User)
 
     def test_polymorphic_query(self):
+        # Create a company first for staff and employer
+        company = create_company("Test Company", "A test company")
+
         # Test that querying User returns appropriate subclass instances
-        staff = create_user("rick", "bobpass", "staff")
-        employer = create_user("sam", "sampass", "employer")
+        staff = create_user("rick", "bobpass", "staff", company_id=company.id)
+        employer = create_user("sam", "sampass", "employer", company_id=company.id)
         student = create_user("hannah", "hannahpass", "student")
 
         # Query by user ID should return the correct subclass
@@ -314,9 +327,12 @@ class UserIntegrationTests(unittest.TestCase):
         assert isinstance(queried_student, User)
 
     def test_query_by_subclass(self):
+        # Create a company first for staff and employer
+        company = create_company("Test Company", "A test company")
+
         # Test that querying by subclass only returns instances of that subclass
-        create_user("rick", "bobpass", "staff")
-        create_user("sam", "sampass", "employer")
+        create_user("rick", "bobpass", "staff", company_id=company.id)
+        create_user("sam", "sampass", "employer", company_id=company.id)
         create_user("hannah", "hannahpass", "student")
 
         # Query specific subclasses
@@ -334,15 +350,21 @@ class UserIntegrationTests(unittest.TestCase):
         assert all(isinstance(s, Student) for s in all_students)
 
     def test_user_relationships_after_inheritance(self):
+        # Create a company first for employer
+        company = create_company("Test Company", "A test company")
+
         # Test that relationships still work correctly after inheritance
-        employer = create_user("sam", "sampass", "employer")
+        employer = create_user("sam", "sampass", "employer", company_id=company.id)
         assert employer is not None
         assert hasattr(employer, 'positions')
         assert isinstance(employer.positions, list)
 
     def test_open_position(self):
+        # Create a company first for employer
+        company = create_company("Test Company", "A test company")
+
         position_count = 2
-        employer = create_user("sally", "sallypass", "employer")
+        employer = create_user("sally", "sallypass", "employer", company_id=company.id)
         assert employer is not None
         assert isinstance(employer, Employer)
 
@@ -358,8 +380,11 @@ class UserIntegrationTests(unittest.TestCase):
 
 
     def test_create_application(self):
+        # Create a company first for staff and employer
+        company = create_company("Test Company", "A test company")
+
         position_count = 3
-        staff = create_user("linda", "lindapass", "staff")
+        staff = create_user("linda", "lindapass", "staff", company_id=company.id)
         assert staff is not None
         assert isinstance(staff, Staff)
 
@@ -367,7 +392,7 @@ class UserIntegrationTests(unittest.TestCase):
         assert student is not None
         assert isinstance(student, Student)
 
-        employer = create_user("ken", "kenpass", "employer")
+        employer = create_user("ken", "kenpass", "employer", company_id=company.id)
         assert employer is not None
         assert isinstance(employer, Employer)
 
@@ -382,16 +407,19 @@ class UserIntegrationTests(unittest.TestCase):
 
 
     def test_application_state_transitions(self):
+        # Create a company first for staff and employer
+        company = create_company("Test Company", "A test company")
+
         position_count = 3
         student = create_user("jack", "jackpass", "student")
         assert student is not None
         assert isinstance(student, Student)
 
-        staff = create_user("pat", "patpass", "staff")
+        staff = create_user("pat", "patpass", "staff", company_id=company.id)
         assert staff is not None
         assert isinstance(staff, Staff)
 
-        employer = create_user("frank", "pass", "employer")
+        employer = create_user("frank", "pass", "employer", company_id=company.id)
         assert employer is not None
         assert isinstance(employer, Employer)
 
@@ -412,15 +440,18 @@ class UserIntegrationTests(unittest.TestCase):
         assert any(s.status == ApplicationStatus.ACCEPTED for s in applications)
         assert len(applications) > 0
     def test_student_view_applications(self):
+        # Create a company first for staff and employer
+        company = create_company("Test Company", "A test company")
+
         student = create_user("john", "johnpass", "student")
         assert student is not None
         assert isinstance(student, Student)
 
-        staff = create_user("tim", "timpass", "staff")
+        staff = create_user("tim", "timpass", "staff", company_id=company.id)
         assert staff is not None
         assert isinstance(staff, Staff)
 
-        employer = create_user("joe", "joepass", "employer")
+        employer = create_user("joe", "joepass", "employer", company_id=company.id)
         assert employer is not None
         assert isinstance(employer, Employer)
 
@@ -432,11 +463,14 @@ class UserIntegrationTests(unittest.TestCase):
         assert len(applications) > 0
 
     def test_no_duplicate_usernames_across_subclasses(self):
+        # Create a company first for staff
+        company = create_company("Test Company", "A test company")
+
         # Test that username uniqueness is enforced across all User subclasses
         create_user("john", "pass1", "student")
 
         # Trying to create another user with same username should fail
-        duplicate_staff = create_user("john", "pass2", "staff")
+        duplicate_staff = create_user("john", "pass2", "staff", company_id=company.id)
         assert duplicate_staff is None
 
     def test_login_works_with_inheritance(self):
@@ -453,10 +487,13 @@ class UserIntegrationTests(unittest.TestCase):
         assert token is None
 
     def test_get_user_returns_correct_subclass(self):
+        # Create a company first for staff and employer
+        company = create_company("Test Company", "A test company")
+
         # Test that get_user returns the correct subclass instance
         student = create_user("john", "johnpass", "student")
-        staff = create_user("jane", "janepass", "staff")
-        employer = create_user("joe", "joepass", "employer")
+        staff = create_user("jane", "janepass", "staff", company_id=company.id)
+        employer = create_user("joe", "joepass", "employer", company_id=company.id)
 
         retrieved_student = get_user(student.id)
         retrieved_staff = get_user(staff.id)
@@ -470,3 +507,90 @@ class UserIntegrationTests(unittest.TestCase):
         assert isinstance(retrieved_student, User)
         assert isinstance(retrieved_staff, User)
         assert isinstance(retrieved_employer, User)
+
+
+class CompanyIntegrationTests(unittest.TestCase):
+
+    def test_create_company(self):
+        company = create_company("Acme Corp", "A test company")
+        assert company is not None
+        assert company.name == "Acme Corp"
+        assert company.description == "A test company"
+        assert company.id is not None
+
+    def test_get_company(self):
+        company = create_company("Test Corp", "Description")
+        retrieved = get_company(company.id)
+        assert retrieved is not None
+        assert retrieved.id == company.id
+        assert retrieved.name == "Test Corp"
+
+    def test_get_company_not_found(self):
+        result = get_company(9999)
+        assert result is None
+
+    def test_get_all_companies(self):
+        create_company("Company A", "First company")
+        create_company("Company B", "Second company")
+        companies = get_all_companies()
+        assert len(companies) >= 2
+
+    def test_update_company(self):
+        company = create_company("Old Name", "Old description")
+        updated = update_company(company.id, name="New Name", description="New description")
+        assert updated is not None
+        assert updated.name == "New Name"
+        assert updated.description == "New description"
+
+    def test_update_company_partial(self):
+        company = create_company("Original", "Original description")
+        updated = update_company(company.id, name="Updated Name")
+        assert updated.name == "Updated Name"
+        assert updated.description == "Original description"
+
+    def test_update_company_not_found(self):
+        result = update_company(9999, name="Test")
+        assert result is None
+
+    def test_delete_company(self):
+        company = create_company("To Delete", "Will be deleted")
+        company_id = company.id
+        result = delete_company(company_id)
+        assert result is True
+        assert get_company(company_id) is None
+
+    def test_delete_company_not_found(self):
+        result = delete_company(9999)
+        assert result is False
+
+    def test_delete_company_cascades_staff_and_employers(self):
+        # Create a company with staff and employers
+        company = create_company("Cascade Test", "Testing cascade delete")
+        staff = create_user("cascade_staff", "pass", "staff", company_id=company.id)
+        employer = create_user("cascade_employer", "pass", "employer", company_id=company.id)
+
+        staff_id = staff.id
+        employer_id = employer.id
+        company_id = company.id
+
+        # Delete the company
+        result = delete_company(company_id)
+        assert result is True
+
+        # Verify staff and employer were also deleted
+        assert get_user(staff_id) is None
+        assert get_user(employer_id) is None
+
+    def test_company_get_json(self):
+        company = create_company("JSON Test", "Testing JSON output")
+        staff = create_user("json_staff", "pass", "staff", company_id=company.id)
+        employer = create_user("json_employer", "pass", "employer", company_id=company.id)
+
+        json_data = company.get_json()
+        assert json_data['id'] == company.id
+        assert json_data['name'] == "JSON Test"
+        assert json_data['description'] == "Testing JSON output"
+        assert len(json_data['staff']) == 1
+        assert len(json_data['employers']) == 1
+        assert json_data['staff'][0]['username'] == "json_staff"
+        assert json_data['employers'][0]['username'] == "json_employer"
