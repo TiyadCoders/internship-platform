@@ -8,75 +8,116 @@ from App.controllers import (
     get_applications_by_student,
     get_applications_by_position,
     get_application,
-    require_role
+    get_applications,
+    require_role,
+    withdraw_application
 )
+from App.database import db
+
 application_views = Blueprint('application_views', __name__)
 
 
-@application_views.route('/api/application', methods=['POST'])
-@require_role('staff')
-def create_application_route():
-    data = request.json
-    if not data or 'student_id' not in data or 'position_id' not in data or 'staff_id' not in data:
-        return jsonify({"error": "Missing required fields"}), 400
-    application = create_application(data['student_id'], data['position_id'], data['staff_id'])
-    if application:
-        return jsonify(application.toJSON()), 201
-    else:
-        return jsonify({"error": "Failed to create application"}), 400
+def _staff_can_access_application(staff_user, application):
+    """Check if staff member can access this application (same company)."""
+    return application.position.employer.company_id == staff_user.company_id
 
 
-@application_views.route('/api/application/<int:id>', methods=['GET'])
-@jwt_required()
-@require_role('employer', 'staff')
-def get_application_by_id(id):
-    application = get_application(id)
-    if application:
-        return jsonify(application.toJSON()), 200
-    else:
-        return jsonify({"error": "Application not found"}), 404
-    
-
-
-@application_views.route('/api/application/student/<int:student_id>', methods=['GET'])
-@jwt_required()
-@require_role('employer')
-def get_application_by_student(student_id):
-    applications = get_applications_by_student(student_id)
+@application_views.route('/api/applications', methods=['GET'])
+@require_role('staff', 'student')
+def view_all_applications():
+    """View all applications (staff and students)."""
+    applications = get_applications(current_user)
     return jsonify([app.toJSON() for app in applications]), 200
 
 
-@application_views.route('/api/application/position/<int:position_id>', methods=['GET'])
-@jwt_required()
-def get_application_by_position(position_id):
+@application_views.route('/api/applications/<int:application_id>', methods=['GET'])
+@require_role('staff', 'student')
+def view_application(application_id):
+    """View a single application by ID (staff and students)."""
+    application = get_application(application_id)
+    if not application:
+        return jsonify({"error": "Application not found"}), 404
+    # Authorization: students can only view their own, staff only their company's
+    if current_user.role == "student":
+        if application.student_id != current_user.id:
+            return jsonify({"error": "Unauthorized"}), 403
+    elif current_user.role == "staff":
+        if not _staff_can_access_application(current_user, application):
+            return jsonify({"error": "Unauthorized"}), 403
+    return jsonify(application.toJSON()), 200
+
+
+@application_views.route('/api/applications/<int:application_id>/shortlist', methods=['PUT'])
+@require_role('staff')
+def shortlist_application_route(application_id):
+    """Shortlist a single application by ID (staff only)."""
+    application = get_application(application_id)
+    if not application:
+        return jsonify({"error": "Application not found"}), 404
+    if not _staff_can_access_application(current_user, application):
+        return jsonify({"error": "Unauthorized"}), 403
+    result = shortlist_application(application_id)
+    if isinstance(result, dict) and 'error' in result:
+        return jsonify({"error": result['error'], "status": result['application'].status.value}), 400
+    return jsonify(result.toJSON()), 200
+
+
+@application_views.route('/api/applications/<int:application_id>/accept', methods=['PUT'])
+@require_role('staff')
+def accept_application_route(application_id):
+    """Accept a single application by ID (staff only)."""
+    application = get_application(application_id)
+    if not application:
+        return jsonify({"error": "Application not found"}), 404
+    if not _staff_can_access_application(current_user, application):
+        return jsonify({"error": "Unauthorized"}), 403
+    result = accept_application(application_id)
+    if isinstance(result, dict) and 'error' in result:
+        return jsonify({"error": result['error'], "status": result['application'].status.value}), 400
+    return jsonify(result.toJSON()), 200
+
+
+@application_views.route('/api/applications/<int:application_id>/reject', methods=['PUT'])
+@require_role('staff')
+def reject_application_route(application_id):
+    """Reject a single application by ID (staff only)."""
+    application = get_application(application_id)
+    if not application:
+        return jsonify({"error": "Application not found"}), 404
+    if not _staff_can_access_application(current_user, application):
+        return jsonify({"error": "Unauthorized"}), 403
+    result = reject_application(application_id)
+    if isinstance(result, dict) and 'error' in result:
+        return jsonify({"error": result['error'], "status": result['application'].status.value}), 400
+    return jsonify(result.toJSON()), 200
+
+
+@application_views.route('/api/applications/<int:application_id>/withdraw', methods=['PUT'])
+@require_role('student')
+def withdraw_application_route(application_id):
+    """Withdraw a single application by ID (student only)."""
+    application = get_application(application_id)
+    if not application:
+        return jsonify({"error": "Application not found"}), 404
+    # Authorization: students can only withdraw their own applications
+    if application.student_id != current_user.id:
+        return jsonify({"error": "Unauthorized"}), 403
+    result = withdraw_application(application_id)
+    if isinstance(result, dict) and 'error' in result:
+        return jsonify({"error": result['error'], "status": result['application'].status.value}), 400
+    return jsonify(result.toJSON()), 200
+
+
+@application_views.route('/api/applications/position/<int:position_id>', methods=['GET'])
+@require_role('staff')
+def view_applications_by_position(position_id):
+    """View applications by position ID (staff only)."""
+    from App.models import Position
+    position = db.session.get(Position, position_id)
+    if not position:
+        return jsonify({"error": "Position not found"}), 404
+    # Authorization: staff can only view applications for their company's positions
+    if position.employer.company_id != current_user.company_id:
+        return jsonify({"error": "Unauthorized"}), 403
     applications = get_applications_by_position(position_id)
     return jsonify([app.toJSON() for app in applications]), 200
-
-
-@application_views.route('/api/application/<int:id>/shortlist', methods=['PUT'])
-@require_role('staff')
-def shortlist_application_route(id):
-    application = shortlist_application(id)
-    if application:
-        return jsonify(application.toJSON()), 200
-    else:
-        return jsonify({"error": "Application not found"}), 404
-    
-
-@application_views.route('/api/application/<int:id>/accept', methods=['PUT'])
-@require_role('staff')
-def accept_application_route(id):
-    application = accept_application(id)
-    if application:
-        return jsonify(application.toJSON()), 200
-    else:
-        return jsonify({"error": "Application not found"}), 404
-    
-@application_views.route('/api/application/<int:id>/reject', methods=['PUT'])
-@require_role('staff')
-def reject_application_route(id):
-    application = reject_application(id)
-    if application:
-        return jsonify(application.toJSON()), 200
-    else:
-        return jsonify({"error": "Application not found"}), 404

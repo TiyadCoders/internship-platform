@@ -4,7 +4,7 @@ from flask.cli import with_appcontext, AppGroup
 from App.database import db, get_migrate
 from App.models import User
 from App.main import create_app
-from App.controllers import ( create_user, get_all_users_json, get_all_users, initialize, open_position, add_student_to_shortlist, get_shortlist_by_student, get_shortlist_by_position, get_positions_by_employer)
+from App.controllers import ( create_user, get_all_users_json, get_all_users, initialize, open_position, add_student_to_shortlist, get_shortlist_by_student, get_positions_by_employer, get_applications_by_position)
 
 
 # This commands file allow you to create convenient CLI commands for testing controllers
@@ -55,7 +55,7 @@ def list_user_command(format):
 @click.argument("employer_id", default=1)
 @click.argument("number", default=1)
 def add_position_command(title, employer_id, number):
-    position = open_position(title, employer_id, number)
+    position = open_position(user_id=employer_id, title=title, number_of_positions=number)
     if position:
         print(f'{title} created!')
     else:
@@ -94,11 +94,11 @@ def get_shortlist_command(student_id):
 @user_cli.command("get_shortlist_by_position", help="Gets a shortlist for a position")
 @click.argument("position_id", default=1)
 def get_shortlist_by_position_command(position_id):
-    list = get_shortlist_by_position(position_id)
+    list = get_applications_by_position(position_id)
     if list:
         for item in list:
             print(f'Student {item.student_id} is {item.status.value} for {item.position.title} id: {item.position_id}')
-            print(f'    Staff {item.staff_id} added this student to the shortlist')
+            print(f'    Updated by staff {item.updated_by}')
             print(f'    Position {item.position_id} is {item.position.status.value}')
             print(f'    Position {item.position_id} has {item.position.number_of_positions} slots')
             print(f'    Position {item.position_id} is for {item.position.title}')

@@ -22,13 +22,18 @@ def create_position():
     data = request.json
     if not data or 'title' not in data or 'number' not in data:
         return jsonify({"error": "Missing required fields"}), 400
-    position = open_position(title=data['title'], user_id=current_user.id, number_of_positions=data['number'])
+    description = data.get('description', None)
+    position = open_position(
+        title=data['title'],
+        user_id=current_user.id,
+        number_of_positions=data['number'],
+        description=description
+    )
 
     if position:
         return jsonify(position.toJSON()), 201
     else:
         return jsonify({"error": "Failed to create position"}), 400
-
 
 @position_views.route('/api/employer/positions', methods=['GET'])
 @require_role('employer')
