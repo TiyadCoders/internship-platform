@@ -3,8 +3,8 @@ from sqlalchemy import Enum
 import enum
 
 class PositionStatus(enum.Enum):
-    open = "open"
-    closed = "closed"
+    OPEN = "open"
+    CLOSED = "closed"
 
 class Position(db.Model):
     __tablename__ = 'position'
@@ -12,14 +12,14 @@ class Position(db.Model):
     title = db.Column(db.String(255), nullable=False)
     number_of_positions = db.Column(db.Integer, default=1)
     description = db.Column(db.Text, nullable=True)
-    status = db.Column(Enum(PositionStatus, native_enum=False), nullable=False, default=PositionStatus.open)
+    status = db.Column(Enum(PositionStatus, native_enum=False), nullable=False, default=PositionStatus.OPEN)
     employer_id = db.Column(db.Integer, db.ForeignKey('employer.id'), nullable=False)
     employer = db.relationship("Employer", back_populates="positions")
 
     def __init__(self, title, employer_id, number, description=None):
         self.title = title
         self.employer_id = employer_id
-        self.status = PositionStatus.open
+        self.status = PositionStatus.OPEN
         self.number_of_positions = number
         self.description = description
 

@@ -127,7 +127,7 @@ class UserUnitTests(unittest.TestCase):
         position = Position("Software Developer", 10, 5)
         assert position.title == "Software Developer"
         assert position.employer_id == 10
-        assert position.status == PositionStatus.open
+        assert position.status == PositionStatus.OPEN
         assert position.number_of_positions == 5
 
     def test_new_application(self):
