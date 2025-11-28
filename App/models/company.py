@@ -9,8 +9,8 @@ class Company(db.Model):
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=False)
 
-    staff = db.relationship("Staff", back_populates="company")
-    employers = db.relationship("Employer", back_populates="company")
+    staff = db.relationship("Staff", back_populates="company", cascade="all, delete-orphan")
+    employers = db.relationship("Employer", back_populates="company", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Company {self.name}>"

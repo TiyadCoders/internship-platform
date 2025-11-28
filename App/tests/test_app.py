@@ -21,6 +21,10 @@ from App.controllers import (
     get_shortlist_by_student,
     accept_application,
     create_company,
+    get_company,
+    get_all_companies,
+    update_company,
+    delete_company,
 )
 
 
@@ -503,3 +507,90 @@ class UserIntegrationTests(unittest.TestCase):
         assert isinstance(retrieved_student, User)
         assert isinstance(retrieved_staff, User)
         assert isinstance(retrieved_employer, User)
+
+
+class CompanyIntegrationTests(unittest.TestCase):
+
+    def test_create_company(self):
+        company = create_company("Acme Corp", "A test company")
+        assert company is not None
+        assert company.name == "Acme Corp"
+        assert company.description == "A test company"
+        assert company.id is not None
+
+    def test_get_company(self):
+        company = create_company("Test Corp", "Description")
+        retrieved = get_company(company.id)
+        assert retrieved is not None
+        assert retrieved.id == company.id
+        assert retrieved.name == "Test Corp"
+
+    def test_get_company_not_found(self):
+        result = get_company(9999)
+        assert result is None
+
+    def test_get_all_companies(self):
+        create_company("Company A", "First company")
+        create_company("Company B", "Second company")
+        companies = get_all_companies()
+        assert len(companies) >= 2
+
+    def test_update_company(self):
+        company = create_company("Old Name", "Old description")
+        updated = update_company(company.id, name="New Name", description="New description")
+        assert updated is not None
+        assert updated.name == "New Name"
+        assert updated.description == "New description"
+
+    def test_update_company_partial(self):
+        company = create_company("Original", "Original description")
+        updated = update_company(company.id, name="Updated Name")
+        assert updated.name == "Updated Name"
+        assert updated.description == "Original description"
+
+    def test_update_company_not_found(self):
+        result = update_company(9999, name="Test")
+        assert result is None
+
+    def test_delete_company(self):
+        company = create_company("To Delete", "Will be deleted")
+        company_id = company.id
+        result = delete_company(company_id)
+        assert result is True
+        assert get_company(company_id) is None
+
+    def test_delete_company_not_found(self):
+        result = delete_company(9999)
+        assert result is False
+
+    def test_delete_company_cascades_staff_and_employers(self):
+        # Create a company with staff and employers
+        company = create_company("Cascade Test", "Testing cascade delete")
+        staff = create_user("cascade_staff", "pass", "staff", company_id=company.id)
+        employer = create_user("cascade_employer", "pass", "employer", company_id=company.id)
+
+        staff_id = staff.id
+        employer_id = employer.id
+        company_id = company.id
+
+        # Delete the company
+        result = delete_company(company_id)
+        assert result is True
+
+        # Verify staff and employer were also deleted
+        assert get_user(staff_id) is None
+        assert get_user(employer_id) is None
+
+    def test_company_get_json(self):
+        company = create_company("JSON Test", "Testing JSON output")
+        staff = create_user("json_staff", "pass", "staff", company_id=company.id)
+        employer = create_user("json_employer", "pass", "employer", company_id=company.id)
+
+        json_data = company.get_json()
+        assert json_data['id'] == company.id
+        assert json_data['name'] == "JSON Test"
+        assert json_data['description'] == "Testing JSON output"
+        assert len(json_data['staff']) == 1
+        assert len(json_data['employers']) == 1
+        assert json_data['staff'][0]['username'] == "json_staff"
+        assert json_data['employers'][0]['username'] == "json_employer"
