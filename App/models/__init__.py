@@ -5,3 +5,4 @@ from .employer import *
 from .position import *
 from .application import *
 from .application_state import *
+from .company import *

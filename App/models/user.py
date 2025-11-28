@@ -21,7 +21,8 @@ class User(db.Model):
     def get_json(self):
         return{
             'id': self.id,
-            'username': self.username
+            'username': self.username,
+            'role': self.role
         }
 
     def set_password(self, password):
