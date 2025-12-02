@@ -18,6 +18,9 @@ class User(db.Model):
         self.set_password(password)
         self.role = role
 
+    def __repr__(self):
+        return f"<User {self.username}>"
+
     def get_json(self):
         return{
             'id': self.id,

@@ -29,14 +29,14 @@ def get_all_positions():
 def get_all_positions_json():
     positions = get_all_positions()
     if positions:
-        return [position.toJSON() for position in positions]
+        return [position.get_json() for position in positions]
     return []
 
 def get_positions_by_employer_json(user_id):
     employer = Employer.query.filter_by(id=user_id).first()
     positions = db.session.query(Position).filter_by(employer_id=employer.id).all()
     if positions:
-        return [position.toJSON() for position in positions]
+        return [position.get_json() for position in positions]
     return []
 
 def update_position_status(position_id, status):

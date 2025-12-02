@@ -15,3 +15,14 @@ class Staff(User):
     def __init__(self, username, password, company_id):
         super().__init__(username, password, 'staff')
         self.company_id = company_id
+
+    def __repr__(self):
+        return f"<Staff {self.username}>"
+
+    def get_json(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+            'role': self.role,
+            'company_id': self.company_id
+        }

@@ -23,6 +23,9 @@ class Position(db.Model):
         self.number_of_positions = number
         self.description = description
 
+    def __repr__(self):
+        return f"<Position {self.title}>"
+
     def get_json(self):
         return {
             "id": self.id,

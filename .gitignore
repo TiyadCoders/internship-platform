@@ -13,3 +13,5 @@ instance/temp-database.db-journal
 # Ignore environment files (optional)
 .env
 env/
+
+docs/
