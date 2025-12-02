@@ -31,7 +31,7 @@ def create_position():
     )
 
     if position:
-        return jsonify(position.toJSON()), 201
+        return jsonify(position.get_json()), 201
     else:
         return jsonify({"error": "Failed to create position"}), 400
 

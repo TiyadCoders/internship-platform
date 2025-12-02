@@ -7,7 +7,13 @@ def open_position(user_id, title, number_of_positions=1, description=None):
     if not employer:
         return None
 
-    new_position = Position(title=title, number=number_of_positions, employer_id=employer.id, description=description)
+    new_position = Position(
+        title=title,
+        company_id=employer.company_id,
+        created_by=employer.id,
+        number=number_of_positions,
+        description=description
+    )
     db.session.add(new_position)
     try:
         db.session.commit()
@@ -21,7 +27,7 @@ def get_positions_by_employer(user_id):
     employer = Employer.query.filter_by(id=user_id).first()
     if not employer:
         return []
-    return db.session.query(Position).filter_by(employer_id=employer.id).all()
+    return db.session.query(Position).filter_by(created_by=employer.id).all()
 
 def get_all_positions():
     return Position.query.all()
@@ -29,14 +35,16 @@ def get_all_positions():
 def get_all_positions_json():
     positions = get_all_positions()
     if positions:
-        return [position.toJSON() for position in positions]
+        return [position.get_json() for position in positions]
     return []
 
 def get_positions_by_employer_json(user_id):
     employer = Employer.query.filter_by(id=user_id).first()
-    positions = db.session.query(Position).filter_by(employer_id=employer.id).all()
+    if not employer:
+        return []
+    positions = db.session.query(Position).filter_by(created_by=employer.id).all()
     if positions:
-        return [position.toJSON() for position in positions]
+        return [position.get_json() for position in positions]
     return []
 
 def update_position_status(position_id, status):
