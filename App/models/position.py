@@ -23,7 +23,7 @@ class Position(db.Model):
         self.number_of_positions = number
         self.description = description
 
-    def toJSON(self):
+    def get_json(self):
         return {
             "id": self.id,
             "title": self.title,

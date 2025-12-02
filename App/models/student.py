@@ -25,16 +25,3 @@ class Student(User):
 
     def __init__(self, username, password):
         super().__init__(username, password, 'student')
-
-#    def update_DOB(self, date):
-#        self.DOB = date
-#        db.session.commit()
-#        return self.DOB
-#        
-#   @hybrid_property
-#   def age(self):
-#       if self.DOB is None:
-#           return None
-#       today = date.today()
-#       dob = self.DOB
-#       return today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
