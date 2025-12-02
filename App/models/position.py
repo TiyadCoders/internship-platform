@@ -22,13 +22,11 @@ class Position(db.Model):
         self.status = PositionStatus.OPEN
         self.number_of_positions = number
         self.description = description
-        self.description = description
 
     def toJSON(self):
         return {
             "id": self.id,
             "title": self.title,
-            "description": self.description,
             "description": self.description,
             "number_of_positions": self.number_of_positions,
             "status": self.status.value,
