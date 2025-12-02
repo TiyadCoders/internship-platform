@@ -13,12 +13,16 @@ class Position(db.Model):
     number_of_positions = db.Column(db.Integer, default=1)
     description = db.Column(db.Text, nullable=True)
     status = db.Column(Enum(PositionStatus, native_enum=False), nullable=False, default=PositionStatus.OPEN)
-    employer_id = db.Column(db.Integer, db.ForeignKey('employer.id'), nullable=False)
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('employer.id'), nullable=False)
+
+    company = db.relationship("Company", back_populates="positions")
     employer = db.relationship("Employer", back_populates="positions")
 
-    def __init__(self, title, employer_id, number, description=None):
+    def __init__(self, title, company_id, created_by, number, description=None):
         self.title = title
-        self.employer_id = employer_id
+        self.company_id = company_id
+        self.created_by = created_by
         self.status = PositionStatus.OPEN
         self.number_of_positions = number
         self.description = description
@@ -33,5 +37,6 @@ class Position(db.Model):
             "description": self.description,
             "number_of_positions": self.number_of_positions,
             "status": self.status.value,
-            "employer_id": self.employer_id
+            "company_id": self.company_id,
+            "created_by": self.created_by
         }

@@ -124,9 +124,10 @@ class UserUnitTests(unittest.TestCase):
         assert not employer.check_password("wrongpass")  # Should reject wrong password
 
     def test_new_position(self):
-        position = Position("Software Developer", 10, 5)
+        position = Position("Software Developer", company_id=1, created_by=10, number=5)
         assert position.title == "Software Developer"
-        assert position.employer_id == 10
+        assert position.company_id == 1
+        assert position.created_by == 10
         assert position.status == PositionStatus.OPEN
         assert position.number_of_positions == 5
 

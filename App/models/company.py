@@ -11,6 +11,7 @@ class Company(db.Model):
 
     staff = db.relationship("Staff", back_populates="company", cascade="all, delete-orphan")
     employers = db.relationship("Employer", back_populates="company", cascade="all, delete-orphan")
+    positions = db.relationship("Position", back_populates="company", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Company {self.name}>"
