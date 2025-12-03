@@ -1,0 +1,2801 @@
+{
+	"info": {
+		"_postman_id": "e29ea11a-3f10-48ef-8f36-9a344964ff25",
+		"name": "API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "49379304",
+		"_collection_link": "https://terrence-murray-2268376.postman.co/workspace/93e43a0d-d9d4-4b80-a227-ed54be07a99a/collection/49379304-e29ea11a-3f10-48ef-8f36-9a344964ff25?action=share&source=collection_link&creator=49379304"
+	},
+	"item": [
+		{
+			"name": "Pre-requests",
+			"item": [
+				{
+					"name": "Login as bob (student)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const base_url = pm.environment.get('base_url');\r",
+									"\r",
+									"pm.sendRequest({\r",
+									"    url: base_url + \"/login\",\r",
+									"    method: 'POST',\r",
+									"    header: {\r",
+									"        'Content-Type': 'application/json'\r",
+									"    },\r",
+									"    body: {\r",
+									"        mode: 'raw',\r",
+									"        raw: JSON.stringify({\r",
+									"            username: 'bob',\r",
+									"            password: 'bobpass'\r",
+									"        })\r",
+									"    }\r",
+									"}, function (err, res) {\r",
+									"    if (!err) {\r",
+									"        const token = res.json().access_token;  // Extract from response\r",
+									"        pm.environment.set(\"access_token\", token);\r",
+									"    }\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "VIEW",
+						"header": [],
+						"url": {
+							"raw": ""
+						},
+						"description": "Utility request to log in as bob (student role). Sets access_token environment variable."
+					},
+					"response": []
+				},
+				{
+					"name": "Login as john (staff)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const base_url = pm.environment.get('base_url');\r",
+									"\r",
+									"pm.sendRequest({\r",
+									"    url: base_url + \"/login\",\r",
+									"    method: 'POST',\r",
+									"    header: {\r",
+									"        'Content-Type': 'application/json'\r",
+									"    },\r",
+									"    body: {\r",
+									"        mode: 'raw',\r",
+									"        raw: JSON.stringify({\r",
+									"            username: 'john',\r",
+									"            password: 'johnpass'\r",
+									"        })\r",
+									"    }\r",
+									"}, function (err, res) {\r",
+									"    if (!err) {\r",
+									"        const token = res.json().access_token;  // Extract from response\r",
+									"        pm.environment.set(\"access_token\", token);\r",
+									"    }\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "VIEW",
+						"header": [],
+						"url": {
+							"raw": ""
+						},
+						"description": "Utility request to log in as john (staff role). Sets access_token environment variable."
+					},
+					"response": []
+				},
+				{
+					"name": "Login as frank (employer)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const base_url = pm.environment.get('base_url');\r",
+									"\r",
+									"pm.sendRequest({\r",
+									"    url: base_url + \"/login\",\r",
+									"    method: 'POST',\r",
+									"    header: {\r",
+									"        'Content-Type': 'application/json'\r",
+									"    },\r",
+									"    body: {\r",
+									"        mode: 'raw',\r",
+									"        raw: JSON.stringify({\r",
+									"            username: 'frank',\r",
+									"            password: 'frankpass'\r",
+									"        })\r",
+									"    }\r",
+									"}, function (err, res) {\r",
+									"    if (!err) {\r",
+									"        const token = res.json().access_token;  // Extract from response\r",
+									"        pm.environment.set(\"access_token\", token);\r",
+									"    }\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "VIEW",
+						"header": [],
+						"url": {
+							"raw": ""
+						},
+						"description": "Utility request to log in as frank (employer role). Sets access_token environment variable."
+					},
+					"response": []
+				}
+			],
+			"description": "Utility requests for logging in as different user types. Used internally by other endpoints' pre-request scripts."
+		},
+		{
+			"name": "Initialize",
+			"item": [
+				{
+					"name": "Initialize application",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/init",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"init"
+							]
+						},
+						"description": "Resets the database to its initial state with test data. Run this before testing to ensure a clean state."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/init",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"init"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n\t\"message\": \"Database initialized with test data\"\n}"
+						}
+					]
+				}
+			],
+			"description": "Initialize the database with test data. Run this before testing other endpoints."
+		},
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "(Public) Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"username\": \"bob\",\n\t\"password\": \"bobpass\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"login"
+							]
+						},
+						"description": "Authenticate a user and receive a JWT access token. Requires username and password in the request body."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"username\": \"bob\",\n\t\"password\": \"bobpass\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/login",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"login"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n\t\"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}"
+						},
+						{
+							"name": "Invalid Credentials",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"username\": \"bob\",\n\t\"password\": \"wrongpassword\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/login",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"login"
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n\t\"message\": \"bad username or password given\"\n}"
+						}
+					]
+				},
+				{
+					"name": "(Public) Login as Student (bob)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has access_token\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property('access_token');\r",
+									"});\r",
+									"\r",
+									"// Store token for subsequent requests\r",
+									"const jsonData = pm.response.json();\r",
+									"pm.environment.set(\"access_token\", jsonData.access_token);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"username\": \"bob\",\n\t\"password\": \"bobpass\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"login"
+							]
+						},
+						"description": "Log in as the test student user (bob). Stores the access_token for subsequent requests."
+					},
+					"response": []
+				},
+				{
+					"name": "(Public) Login as Staff (john)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has access_token\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property('access_token');\r",
+									"});\r",
+									"\r",
+									"// Store token for subsequent requests\r",
+									"const jsonData = pm.response.json();\r",
+									"pm.environment.set(\"access_token\", jsonData.access_token);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"username\": \"john\",\n\t\"password\": \"johnpass\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"login"
+							]
+						},
+						"description": "Log in as the test staff user (john). Stores the access_token for subsequent requests."
+					},
+					"response": []
+				},
+				{
+					"name": "(Public) Login as Employer (frank)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has access_token\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property('access_token');\r",
+									"});\r",
+									"\r",
+									"// Store token for subsequent requests\r",
+									"const jsonData = pm.response.json();\r",
+									"pm.environment.set(\"access_token\", jsonData.access_token);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"username\": \"frank\",\n\t\"password\": \"frankpass\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"login"
+							]
+						},
+						"description": "Log in as the test employer user (frank). Stores the access_token for subsequent requests."
+					},
+					"response": []
+				},
+				{
+					"name": "(Public) Signup",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"username\": \"newuser\",\n\t\"password\": \"newpass\",\n\t\"type\": \"student\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/signup",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"signup"
+							]
+						},
+						"description": "Register a new user account. Requires username, password, and type (student/staff/employer)."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"username\": \"newuser\",\n\t\"password\": \"newpass\",\n\t\"type\": \"student\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/signup",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"signup"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n\t\"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}"
+						}
+					]
+				},
+				{
+					"name": "(Public) Identify",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/identify",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"identify"
+							]
+						},
+						"description": "Get the current authenticated user's information. Requires a valid access token."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/identify",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"identify"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n\t\"message\": \"username: bob, id : 1\"\n}"
+						}
+					]
+				},
+				{
+					"name": "(Authorized) Logout",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"logout"
+							]
+						},
+						"description": "Log out the current user and invalidate their access token."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/logout",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"logout"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n\t\"message\": \"Logged Out!\"\n}"
+						}
+					]
+				}
+			],
+			"description": "Authentication endpoints for login, signup, logout, and user identification. Includes pre-configured logins for each user type: Student (bob), Staff (john), and Employer (frank)."
+		},
+		{
+			"name": "Applications",
+			"item": [
+				{
+					"name": "(Staff) Get applications associated with user",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const base_url = pm.environment.get('base_url');\r",
+									"\r",
+									"// Use setTimeout to add delay, allowing async login to complete\r",
+									"setTimeout(function() {}, 100);\r",
+									"\r",
+									"pm.sendRequest({\r",
+									"    url: base_url + \"/login\",\r",
+									"    method: 'POST',\r",
+									"    header: {\r",
+									"        'Content-Type': 'application/json'\r",
+									"    },\r",
+									"    body: {\r",
+									"        mode: 'raw',\r",
+									"        raw: JSON.stringify({\r",
+									"            username: 'john',\r",
+									"            password: 'johnpass'\r",
+									"        })\r",
+									"    }\r",
+									"}, function (err, res) {\r",
+									"    if (!err && res.code === 200) {\r",
+									"        const token = res.json().access_token;\r",
+									"        pm.environment.set(\"access_token\", token);\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Delay to allow the async request to complete before main request\r",
+									"const sleep = (ms) => {\r",
+									"    const start = Date.now();\r",
+									"    while (Date.now() - start < ms) {}\r",
+									"};\r",
+									"sleep(500);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test that the response status is 200\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"\r",
+									"// Test that response is JSON\r",
+									"pm.test(\"Response is JSON\", function () {\r",
+									"    pm.response.to.be.json;\r",
+									"});\r",
+									"\r",
+									"// Test that response is an array\r",
+									"pm.test(\"Response is an array\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.be.an('array');\r",
+									"});\r",
+									"\r",
+									"// Test each application has required fields\r",
+									"pm.test(\"Applications have required fields\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    if (jsonData.length > 0) {\r",
+									"        jsonData.forEach(function (app) {\r",
+									"            pm.expect(app).to.have.property('id');\r",
+									"            pm.expect(app).to.have.property('student_id');\r",
+									"            pm.expect(app).to.have.property('position_id');\r",
+									"            pm.expect(app).to.have.property('status');\r",
+									"            pm.expect(app).to.have.property('created_at');\r",
+									"            pm.expect(app).to.have.property('updated_at');\r",
+									"            pm.expect(app).to.have.property('updated_by');\r",
+									"            pm.expect(app).to.have.property('available_actions');\r",
+									"        });\r",
+									"    }\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/applications",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"applications"
+							]
+						},
+						"description": "Get all applications visible to the logged-in staff member. Automatically logs in as john (staff)."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/applications",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"applications"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "[\n\t{\n\t\t\"id\": 1,\n\t\t\"student_id\": 1,\n\t\t\"position_id\": 1,\n\t\t\"updated_by\": null,\n\t\t\"status\": \"pending\",\n\t\t\"available_actions\": [\"shortlist\", \"accept\", \"reject\", \"withdraw\"],\n\t\t\"created_at\": \"2024-01-15T10:30:00\",\n\t\t\"updated_at\": \"2024-01-15T10:30:00\"\n\t}\n]"
+						}
+					]
+				},
+				{
+					"name": "(Staff) Get applications associated for a position",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const base_url = pm.environment.get('base_url');\r",
+									"\r",
+									"// Use setTimeout to add delay, allowing async login to complete\r",
+									"setTimeout(function() {}, 100);\r",
+									"\r",
+									"pm.sendRequest({\r",
+									"    url: base_url + \"/login\",\r",
+									"    method: 'POST',\r",
+									"    header: {\r",
+									"        'Content-Type': 'application/json'\r",
+									"    },\r",
+									"    body: {\r",
+									"        mode: 'raw',\r",
+									"        raw: JSON.stringify({\r",
+									"            username: 'john',\r",
+									"            password: 'johnpass'\r",
+									"        })\r",
+									"    }\r",
+									"}, function (err, res) {\r",
+									"    if (!err && res.code === 200) {\r",
+									"        const token = res.json().access_token;\r",
+									"        pm.environment.set(\"access_token\", token);\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Delay to allow the async request to complete before main request\r",
+									"const sleep = (ms) => {\r",
+									"    const start = Date.now();\r",
+									"    while (Date.now() - start < ms) {}\r",
+									"};\r",
+									"sleep(500);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test that the response status is 200\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"\r",
+									"// Test that response is JSON\r",
+									"pm.test(\"Response is JSON\", function () {\r",
+									"    pm.response.to.be.json;\r",
+									"});\r",
+									"\r",
+									"// Test that response is an array\r",
+									"pm.test(\"Response is an array\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.be.an('array');\r",
+									"});\r",
+									"\r",
+									"// Test each application has required fields\r",
+									"pm.test(\"Applications have required fields\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    if (jsonData.length > 0) {\r",
+									"        jsonData.forEach(function (app) {\r",
+									"            pm.expect(app).to.have.property('id');\r",
+									"            pm.expect(app).to.have.property('student_id');\r",
+									"            pm.expect(app).to.have.property('position_id');\r",
+									"            pm.expect(app).to.have.property('status');\r",
+									"            pm.expect(app).to.have.property('created_at');\r",
+									"            pm.expect(app).to.have.property('updated_at');\r",
+									"            pm.expect(app).to.have.property('updated_by');\r",
+									"            pm.expect(app).to.have.property('available_actions');\r",
+									"        });\r",
+									"    }\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/applications/position/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"applications",
+								"position",
+								"1"
+							]
+						},
+						"description": "Get all applications for a specific position. Automatically logs in as john (staff)."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/applications/position/1",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"applications",
+										"position",
+										"1"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "[\n\t{\n\t\t\"id\": 1,\n\t\t\"student_id\": 1,\n\t\t\"position_id\": 1,\n\t\t\"updated_by\": null,\n\t\t\"status\": \"pending\",\n\t\t\"available_actions\": [\"shortlist\", \"accept\", \"reject\", \"withdraw\"],\n\t\t\"created_at\": \"2024-01-15T10:30:00\",\n\t\t\"updated_at\": \"2024-01-15T10:30:00\"\n\t}\n]"
+						}
+					]
+				},
+				{
+					"name": "(Student) Get applications associated with user",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const base_url = pm.environment.get('base_url');\r",
+									"\r",
+									"// Use setTimeout to add delay, allowing async login to complete\r",
+									"setTimeout(function() {}, 100);\r",
+									"\r",
+									"pm.sendRequest({\r",
+									"    url: base_url + \"/login\",\r",
+									"    method: 'POST',\r",
+									"    header: {\r",
+									"        'Content-Type': 'application/json'\r",
+									"    },\r",
+									"    body: {\r",
+									"        mode: 'raw',\r",
+									"        raw: JSON.stringify({\r",
+									"            username: 'bob',\r",
+									"            password: 'bobpass'\r",
+									"        })\r",
+									"    }\r",
+									"}, function (err, res) {\r",
+									"    if (!err && res.code === 200) {\r",
+									"        const token = res.json().access_token;\r",
+									"        pm.environment.set(\"access_token\", token);\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Delay to allow the async request to complete before main request\r",
+									"const sleep = (ms) => {\r",
+									"    const start = Date.now();\r",
+									"    while (Date.now() - start < ms) {}\r",
+									"};\r",
+									"sleep(500);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test that the response status is 200\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"\r",
+									"// Test that response is JSON\r",
+									"pm.test(\"Response is JSON\", function () {\r",
+									"    pm.response.to.be.json;\r",
+									"});\r",
+									"\r",
+									"// Test that response is an array\r",
+									"pm.test(\"Response is an array\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.be.an('array');\r",
+									"});\r",
+									"\r",
+									"// Test each application has required fields\r",
+									"pm.test(\"Applications have required fields\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    if (jsonData.length > 0) {\r",
+									"        jsonData.forEach(function (app) {\r",
+									"            pm.expect(app).to.have.property('id');\r",
+									"            pm.expect(app).to.have.property('student_id');\r",
+									"            pm.expect(app).to.have.property('position_id');\r",
+									"            pm.expect(app).to.have.property('updated_at');\r",
+									"            pm.expect(app).to.have.property('status');\r",
+									"            pm.expect(app).to.have.property('created_at');\r",
+									"            pm.expect(app).to.have.property('updated_at');\r",
+									"            pm.expect(app).to.have.property('available_actions');\r",
+									"        });\r",
+									"    }\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/applications",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"applications"
+							]
+						},
+						"description": "Get all applications submitted by the logged-in student. Automatically logs in as bob (student)."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/applications",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"applications"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "[\n\t{\n\t\t\"id\": 1,\n\t\t\"student_id\": 1,\n\t\t\"position_id\": 1,\n\t\t\"updated_by\": null,\n\t\t\"status\": \"pending\",\n\t\t\"available_actions\": [\"shortlist\", \"accept\", \"reject\", \"withdraw\"],\n\t\t\"created_at\": \"2024-01-15T10:30:00\",\n\t\t\"updated_at\": \"2024-01-15T10:30:00\"\n\t}\n]"
+						}
+					]
+				},
+				{
+					"name": "(Student)  Get application details with current state",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const base_url = pm.environment.get('base_url');\r",
+									"\r",
+									"// Use setTimeout to add delay, allowing async login to complete\r",
+									"setTimeout(function() {}, 100);\r",
+									"\r",
+									"pm.sendRequest({\r",
+									"    url: base_url + \"/login\",\r",
+									"    method: 'POST',\r",
+									"    header: {\r",
+									"        'Content-Type': 'application/json'\r",
+									"    },\r",
+									"    body: {\r",
+									"        mode: 'raw',\r",
+									"        raw: JSON.stringify({\r",
+									"            username: 'bob',\r",
+									"            password: 'bobpass'\r",
+									"        })\r",
+									"    }\r",
+									"}, function (err, res) {\r",
+									"    if (!err && res.code === 200) {\r",
+									"        const token = res.json().access_token;\r",
+									"        pm.environment.set(\"access_token\", token);\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Delay to allow the async request to complete before main request\r",
+									"const sleep = (ms) => {\r",
+									"    const start = Date.now();\r",
+									"    while (Date.now() - start < ms) {}\r",
+									"};\r",
+									"sleep(500);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test that the response status is 200\r",
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"// Test that response is JSON\r",
+									"pm.test(\"Response is JSON\", function () {\r",
+									"    pm.response.to.be.json;\r",
+									"});\r",
+									"\r",
+									"// Test that response is an object\r",
+									"pm.test(\"Response is an object\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.be.an('object');\r",
+									"});\r",
+									"\r",
+									"// Test each application has required fields\r",
+									"pm.test(\"Application has required fields\", function () {\r",
+									"    const app = pm.response.json();\r",
+									"    pm.expect(app).to.have.property('id');\r",
+									"    pm.expect(app).to.have.property('student_id');\r",
+									"    pm.expect(app).to.have.property('position_id');\r",
+									"    pm.expect(app).to.have.property('status');\r",
+									"    pm.expect(app).to.have.property('created_at');\r",
+									"    pm.expect(app).to.have.property('updated_at');\r",
+									"    pm.expect(app).to.have.property('updated_by');\r",
+									"    pm.expect(app).to.have.property('available_actions');\r",
+									"\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/applications/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"applications",
+								"1"
+							]
+						},
+						"description": "Get detailed information about a specific application including available actions. Automatically logs in as bob (student)."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/applications/1",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"applications",
+										"1"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n\t\"id\": 1,\n\t\"student_id\": 1,\n\t\"position_id\": 1,\n\t\"updated_by\": null,\n\t\"status\": \"pending\",\n\t\"available_actions\": [\"shortlist\", \"accept\", \"reject\", \"withdraw\"],\n\t\"created_at\": \"2024-01-15T10:30:00\",\n\t\"updated_at\": \"2024-01-15T10:30:00\"\n}"
+						},
+						{
+							"name": "Not Found",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/applications/999",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"applications",
+										"999"
+									]
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n\t\"error\": \"Application not found\"\n}"
+						}
+					]
+				},
+				{
+					"name": "(Staff) Shortlist student application",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const base_url = pm.environment.get('base_url');\r",
+									"\r",
+									"// Use setTimeout to add delay, allowing async login to complete\r",
+									"setTimeout(function() {}, 100);\r",
+									"\r",
+									"pm.sendRequest({\r",
+									"    url: base_url + \"/login\",\r",
+									"    method: 'POST',\r",
+									"    header: {\r",
+									"        'Content-Type': 'application/json'\r",
+									"    },\r",
+									"    body: {\r",
+									"        mode: 'raw',\r",
+									"        raw: JSON.stringify({\r",
+									"            username: 'john',\r",
+									"            password: 'johnpass'\r",
+									"        })\r",
+									"    }\r",
+									"}, function (err, res) {\r",
+									"    if (!err && res.code === 200) {\r",
+									"        const token = res.json().access_token;\r",
+									"        pm.environment.set(\"access_token\", token);\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Delay to allow the async request to complete before main request\r",
+									"const sleep = (ms) => {\r",
+									"    const start = Date.now();\r",
+									"    while (Date.now() - start < ms) {}\r",
+									"};\r",
+									"sleep(500);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has application data\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property('id');\r",
+									"    pm.expect(jsonData).to.have.property('status');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Application status is shortlisted\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData.status).to.eql('shortlisted');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Application available are accept or reject\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData.status).to.eql('shortlisted');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has required fields\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property('student_id');\r",
+									"    pm.expect(jsonData).to.have.property('position_id');\r",
+									"    pm.expect(jsonData).to.have.property('updated_by');\r",
+									"});\r",
+									"\r",
+									"\r",
+									"pm.test(\"Shortlisted application onlys allows reject, withdraw and accept\", function () {\r",
+									"    const app = pm.response.json();\r",
+									"    const accepted = app.status === \"accepted\";\r",
+									"    if (accepted) {\r",
+									"        pm.expect(app.available_actions).to.deep.equal(['reject', 'withdraw', 'accpet']);\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"\r",
+									"// Re-initilze database after running test\r",
+									"const base_url = pm.environment.get('base_url');\r",
+									"\r",
+									"pm.sendRequest({\r",
+									"    url: base_url + '/init',\r",
+									"    method: 'POST',\r",
+									"    header: {\r",
+									"        'Content-Type': 'application/json'\r",
+									"    }\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/applications/1/shortlist",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"applications",
+								"1",
+								"shortlist"
+							]
+						},
+						"description": "Move an application to the shortlisted state. Automatically logs in as john (staff). Reinitializes database after test."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/applications/1/shortlist",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"applications",
+										"1",
+										"shortlist"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n\t\"id\": 1,\n\t\"student_id\": 1,\n\t\"position_id\": 1,\n\t\"updated_by\": 2,\n\t\"status\": \"shortlisted\",\n\t\"available_actions\": [\"accept\", \"reject\", \"withdraw\"],\n\t\"created_at\": \"2024-01-15T10:30:00\",\n\t\"updated_at\": \"2024-01-15T11:00:00\"\n}"
+						},
+						{
+							"name": "Invalid State Transition",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/applications/1/shortlist",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"applications",
+										"1",
+										"shortlist"
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n\t\"error\": \"Cannot shortlist application in current state\",\n\t\"status\": \"accepted\"\n}"
+						}
+					]
+				},
+				{
+					"name": "(Staff) Accept student application",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const base_url = pm.environment.get('base_url');\r",
+									"\r",
+									"// Use setTimeout to add delay, allowing async login to complete\r",
+									"setTimeout(function() {}, 100);\r",
+									"\r",
+									"pm.sendRequest({\r",
+									"    url: base_url + \"/login\",\r",
+									"    method: 'POST',\r",
+									"    header: {\r",
+									"        'Content-Type': 'application/json'\r",
+									"    },\r",
+									"    body: {\r",
+									"        mode: 'raw',\r",
+									"        raw: JSON.stringify({\r",
+									"            username: 'john',\r",
+									"            password: 'johnpass'\r",
+									"        })\r",
+									"    }\r",
+									"}, function (err, res) {\r",
+									"    if (!err && res.code === 200) {\r",
+									"        const token = res.json().access_token;\r",
+									"        pm.environment.set(\"access_token\", token);\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Delay to allow the async request to complete before main request\r",
+									"const sleep = (ms) => {\r",
+									"    const start = Date.now();\r",
+									"    while (Date.now() - start < ms) {}\r",
+									"};\r",
+									"sleep(500);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has application data\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property('id');\r",
+									"    pm.expect(jsonData).to.have.property('status');\r",
+									"    pm.expect(jsonData).to.have.property('student_id');\r",
+									"    pm.expect(jsonData).to.have.property('position_id');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Application status is accepted\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData.status).to.eql('accepted');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has timestamps\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property('created_at');\r",
+									"    pm.expect(jsonData).to.have.property('updated_at');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Accepted application only allows reject\", function () {\r",
+									"    const app = pm.response.json();\r",
+									"    pm.expect(app.available_actions).to.deep.equal(['reject']);\r",
+									"});\r",
+									"\r",
+									"// Re-initilze database after running test\r",
+									"const base_url = pm.environment.get('base_url');\r",
+									"pm.sendRequest({\r",
+									"    url: base_url + '/init',\r",
+									"    method: 'POST',\r",
+									"    header: {\r",
+									"        'Content-Type': 'application/json'\r",
+									"    }\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/applications/1/accept",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"applications",
+								"1",
+								"accept"
+							]
+						},
+						"description": "Accept a student's application. Automatically logs in as john (staff). Reinitializes database after test."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/applications/1/accept",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"applications",
+										"1",
+										"accept"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n\t\"id\": 1,\n\t\"student_id\": 1,\n\t\"position_id\": 1,\n\t\"updated_by\": 2,\n\t\"status\": \"accepted\",\n\t\"available_actions\": [\"reject\"],\n\t\"created_at\": \"2024-01-15T10:30:00\",\n\t\"updated_at\": \"2024-01-15T11:00:00\"\n}"
+						},
+						{
+							"name": "Invalid State Transition",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/applications/1/accept",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"applications",
+										"1",
+										"accept"
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n\t\"error\": \"Cannot accept application in current state\",\n\t\"status\": \"withdrawn\"\n}"
+						}
+					]
+				},
+				{
+					"name": "(Staff) Reject student application",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const base_url = pm.environment.get('base_url');\r",
+									"\r",
+									"// Use setTimeout to add delay, allowing async login to complete\r",
+									"setTimeout(function() {}, 100);\r",
+									"\r",
+									"pm.sendRequest({\r",
+									"    url: base_url + \"/login\",\r",
+									"    method: 'POST',\r",
+									"    header: {\r",
+									"        'Content-Type': 'application/json'\r",
+									"    },\r",
+									"    body: {\r",
+									"        mode: 'raw',\r",
+									"        raw: JSON.stringify({\r",
+									"            username: 'john',\r",
+									"            password: 'johnpass'\r",
+									"        })\r",
+									"    }\r",
+									"}, function (err, res) {\r",
+									"    if (!err && res.code === 200) {\r",
+									"        const token = res.json().access_token;\r",
+									"        pm.environment.set(\"access_token\", token);\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Delay to allow the async request to complete before main request\r",
+									"const sleep = (ms) => {\r",
+									"    const start = Date.now();\r",
+									"    while (Date.now() - start < ms) {}\r",
+									"};\r",
+									"sleep(500);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has application data\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property('id');\r",
+									"    pm.expect(jsonData).to.have.property('status');\r",
+									"    pm.expect(jsonData).to.have.property('student_id');\r",
+									"    pm.expect(jsonData).to.have.property('position_id');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Application status is rejected\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData.status).to.eql('rejected');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has timestamps\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property('created_at');\r",
+									"    pm.expect(jsonData).to.have.property('updated_at');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Rejected application onlys allows shortlist and withdraw\", function () {\r",
+									"    const app = pm.response.json();\r",
+									"    pm.expect(app.available_actions).to.deep.equal(['shortlist', 'withdraw']);\r",
+									"});\r",
+									"\r",
+									"\r",
+									"// Re-initilze database after running test\r",
+									"const base_url = pm.environment.get('base_url');\r",
+									"pm.sendRequest({\r",
+									"    url: base_url + '/init',\r",
+									"    method: 'POST',\r",
+									"    header: {\r",
+									"        'Content-Type': 'application/json'\r",
+									"    }\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/applications/1/reject",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"applications",
+								"1",
+								"reject"
+							]
+						},
+						"description": "Reject a student's application. Automatically logs in as john (staff). Reinitializes database after test."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/applications/1/reject",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"applications",
+										"1",
+										"reject"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n\t\"id\": 1,\n\t\"student_id\": 1,\n\t\"position_id\": 1,\n\t\"updated_by\": 2,\n\t\"status\": \"rejected\",\n\t\"available_actions\": [\"shortlist\", \"withdraw\"],\n\t\"created_at\": \"2024-01-15T10:30:00\",\n\t\"updated_at\": \"2024-01-15T11:00:00\"\n}"
+						},
+						{
+							"name": "Invalid State Transition",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/applications/1/reject",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"applications",
+										"1",
+										"reject"
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n\t\"error\": \"Cannot reject application in current state\",\n\t\"status\": \"withdrawn\"\n}"
+						}
+					]
+				},
+				{
+					"name": "(Student) Withdraw student application",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const base_url = pm.environment.get('base_url');\r",
+									"\r",
+									"// Use setTimeout to add delay, allowing async login to complete\r",
+									"setTimeout(function() {}, 100);\r",
+									"\r",
+									"pm.sendRequest({\r",
+									"    url: base_url + \"/login\",\r",
+									"    method: 'POST',\r",
+									"    header: {\r",
+									"        'Content-Type': 'application/json'\r",
+									"    },\r",
+									"    body: {\r",
+									"        mode: 'raw',\r",
+									"        raw: JSON.stringify({\r",
+									"            username: 'bob',\r",
+									"            password: 'bobpass'\r",
+									"        })\r",
+									"    }\r",
+									"}, function (err, res) {\r",
+									"    if (!err && res.code === 200) {\r",
+									"        const token = res.json().access_token;\r",
+									"        pm.environment.set(\"access_token\", token);\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Delay to allow the async request to complete before main request\r",
+									"const sleep = (ms) => {\r",
+									"    const start = Date.now();\r",
+									"    while (Date.now() - start < ms) {}\r",
+									"};\r",
+									"sleep(500);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"withdrawn application has no available actions\", function () {\r",
+									"    const app = pm.response.json();\r",
+									"    pm.expect(app.available_actions).to.deep.equal([]);\r",
+									"});\r",
+									"\r",
+									"// Re-initilze database after running test\r",
+									"const base_url = pm.environment.get('base_url');\r",
+									"pm.sendRequest({\r",
+									"    url: base_url + '/init',\r",
+									"    method: 'POST',\r",
+									"    header: {\r",
+									"        'Content-Type': 'application/json'\r",
+									"    }\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/applications/1/withdraw",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"applications",
+								"1",
+								"withdraw"
+							]
+						},
+						"description": "Withdraw an application. Only the student who submitted the application can withdraw it. Automatically logs in as bob (student). Reinitializes database after test."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/applications/1/withdraw",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"applications",
+										"1",
+										"withdraw"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n\t\"id\": 1,\n\t\"student_id\": 1,\n\t\"position_id\": 1,\n\t\"updated_by\": 1,\n\t\"status\": \"withdrawn\",\n\t\"available_actions\": [],\n\t\"created_at\": \"2024-01-15T10:30:00\",\n\t\"updated_at\": \"2024-01-15T11:00:00\"\n}"
+						},
+						{
+							"name": "Invalid State Transition",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/applications/1/withdraw",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"applications",
+										"1",
+										"withdraw"
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n\t\"error\": \"Cannot withdraw application in current state\",\n\t\"status\": \"withdrawn\"\n}"
+						}
+					]
+				}
+			],
+			"description": "Manage internship applications. Students can apply, view, and withdraw applications. Staff can view, shortlist, accept, and reject applications.",
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{access_token}}",
+						"type": "string"
+					}
+				]
+			}
+		},
+		{
+			"name": "Positions",
+			"item": [
+				{
+					"name": "(Public) Get company positions",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response is an array\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.be.an('array');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Positions belong to the requested company\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    jsonData.forEach(function(position) {\r",
+									"        pm.expect(position.company_id).to.eql(1);\r",
+									"    });\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Positions have required fields\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    if (jsonData.length > 0) {\r",
+									"        pm.expect(jsonData[0]).to.have.property('id');\r",
+									"        pm.expect(jsonData[0]).to.have.property('title');\r",
+									"        pm.expect(jsonData[0]).to.have.property('company_id');\r",
+									"    }\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/positions/company/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"positions",
+								"company",
+								"1"
+							]
+						},
+						"description": "Get all positions for a specific company. No authentication required."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/positions/company/1",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"positions",
+										"company",
+										"1"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "[\n\t{\n\t\t\"id\": 1,\n\t\t\"title\": \"Software Engineer\",\n\t\t\"description\": \"Develop software solutions\",\n\t\t\"number_of_positions\": 5,\n\t\t\"status\": \"open\",\n\t\t\"company_id\": 1,\n\t\t\"created_by\": 1\n\t}\n]"
+						}
+					]
+				},
+				{
+					"name": "(Public) List all open positions",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response is an array\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.be.an('array');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"All positions are open\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    jsonData.forEach(function(position) {\r",
+									"        pm.expect(position.status).to.eql('open');\r",
+									"    });\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Positions have required fields\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    if (jsonData.length > 0) {\r",
+									"        pm.expect(jsonData[0]).to.have.property('id');\r",
+									"        pm.expect(jsonData[0]).to.have.property('title');\r",
+									"        pm.expect(jsonData[0]).to.have.property('description');\r",
+									"        pm.expect(jsonData[0]).to.have.property('status');\r",
+									"    }\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/positions/all",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"positions",
+								"all"
+							]
+						},
+						"description": "Get all positions with 'open' status. No authentication required."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/positions/all",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"positions",
+										"all"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "[\n\t{\n\t\t\"id\": 1,\n\t\t\"title\": \"Software Engineer\",\n\t\t\"description\": \"Develop software solutions\",\n\t\t\"number_of_positions\": 5,\n\t\t\"status\": \"open\",\n\t\t\"company_id\": 1,\n\t\t\"created_by\": 1\n\t}\n]"
+						}
+					]
+				},
+				{
+					"name": "(Public) Get position details",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Position has required fields\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property('id');\r",
+									"    pm.expect(jsonData).to.have.property('title');\r",
+									"    pm.expect(jsonData).to.have.property('description');\r",
+									"    pm.expect(jsonData).to.have.property('number_of_positions');\r",
+									"    pm.expect(jsonData).to.have.property('status');\r",
+									"    pm.expect(jsonData).to.have.property('company_id');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Position ID matches request\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData.id).to.eql(1);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/positions/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"positions",
+								"1"
+							]
+						},
+						"description": "Get detailed information about a specific position. No authentication required."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/positions/1",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"positions",
+										"1"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n\t\"id\": 1,\n\t\"title\": \"Software Engineer\",\n\t\"description\": \"Develop software solutions\",\n\t\"number_of_positions\": 5,\n\t\"status\": \"open\",\n\t\"company_id\": 1,\n\t\"created_by\": 1\n}"
+						},
+						{
+							"name": "Not Found",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/positions/999",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"positions",
+										"999"
+									]
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n\t\"error\": \"Position not found\"\n}"
+						}
+					]
+				},
+				{
+					"name": "(Employer) Close position",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const base_url = pm.environment.get('base_url');\r",
+									"\r",
+									"// Use setTimeout to add delay, allowing async login to complete\r",
+									"setTimeout(function() {}, 100);\r",
+									"\r",
+									"pm.sendRequest({\r",
+									"    url: base_url + \"/login\",\r",
+									"    method: 'POST',\r",
+									"    header: {\r",
+									"        'Content-Type': 'application/json'\r",
+									"    },\r",
+									"    body: {\r",
+									"        mode: 'raw',\r",
+									"        raw: JSON.stringify({\r",
+									"            username: 'frank',\r",
+									"            password: 'frankpass'\r",
+									"        })\r",
+									"    }\r",
+									"}, function (err, res) {\r",
+									"    if (!err && res.code === 200) {\r",
+									"        const token = res.json().access_token;\r",
+									"        pm.environment.set(\"access_token\", token);\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Delay to allow the async request to complete before main request\r",
+									"const sleep = (ms) => {\r",
+									"    const start = Date.now();\r",
+									"    while (Date.now() - start < ms) {}\r",
+									"};\r",
+									"sleep(500);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Position status is closed\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData.status).to.eql('closed');\r",
+									"});\r",
+									"\r",
+									"// Re-initialize database after running test\r",
+									"const base_url = pm.environment.get('base_url');\r",
+									"pm.sendRequest({\r",
+									"    url: base_url + '/init',\r",
+									"    method: 'POST',\r",
+									"    header: {\r",
+									"        'Content-Type': 'application/json'\r",
+									"    }\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/positions/1/close",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"positions",
+								"1",
+								"close"
+							]
+						},
+						"description": "Close a position to stop accepting new applications. Automatically logs in as frank (employer). Reinitializes database after test."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/positions/1/close",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"positions",
+										"1",
+										"close"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n\t\"id\": 1,\n\t\"title\": \"Software Engineer\",\n\t\"description\": \"Develop software solutions\",\n\t\"number_of_positions\": 5,\n\t\"status\": \"closed\",\n\t\"company_id\": 1,\n\t\"created_by\": 1\n}"
+						}
+					]
+				},
+				{
+					"name": "(Employer) Edit a position",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const base_url = pm.environment.get('base_url');\r",
+									"\r",
+									"// Use setTimeout to add delay, allowing async login to complete\r",
+									"setTimeout(function() {}, 100);\r",
+									"\r",
+									"pm.sendRequest({\r",
+									"    url: base_url + \"/login\",\r",
+									"    method: 'POST',\r",
+									"    header: {\r",
+									"        'Content-Type': 'application/json'\r",
+									"    },\r",
+									"    body: {\r",
+									"        mode: 'raw',\r",
+									"        raw: JSON.stringify({\r",
+									"            username: 'frank',\r",
+									"            password: 'frankpass'\r",
+									"        })\r",
+									"    }\r",
+									"}, function (err, res) {\r",
+									"    if (!err && res.code === 200) {\r",
+									"        const token = res.json().access_token;\r",
+									"        pm.environment.set(\"access_token\", token);\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Delay to allow the async request to complete before main request\r",
+									"const sleep = (ms) => {\r",
+									"    const start = Date.now();\r",
+									"    while (Date.now() - start < ms) {}\r",
+									"};\r",
+									"sleep(500);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Position is updated\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property('id');\r",
+									"    pm.expect(jsonData).to.have.property('title');\r",
+									"});\r",
+									"\r",
+									"// Re-initialize database after running test\r",
+									"const base_url = pm.environment.get('base_url');\r",
+									"pm.sendRequest({\r",
+									"    url: base_url + '/init',\r",
+									"    method: 'POST',\r",
+									"    header: {\r",
+									"        'Content-Type': 'application/json'\r",
+									"    }\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"title\": \"Senior Software Engineer\",\n\t\"description\": \"Updated description\",\n\t\"number\": 3\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/positions/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"positions",
+								"1"
+							]
+						},
+						"description": "Update position details (title, description, number of positions). Automatically logs in as frank (employer). Reinitializes database after test."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"title\": \"Senior Software Engineer\",\n\t\"description\": \"Updated description\",\n\t\"number\": 3\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/positions/1",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"positions",
+										"1"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n\t\"id\": 1,\n\t\"title\": \"Senior Software Engineer\",\n\t\"description\": \"Updated description\",\n\t\"number_of_positions\": 3,\n\t\"status\": \"open\",\n\t\"company_id\": 1,\n\t\"created_by\": 1\n}"
+						}
+					]
+				},
+				{
+					"name": "(Student) Apply for position",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const base_url = pm.environment.get('base_url');\r",
+									"\r",
+									"// Use setTimeout to add delay, allowing async login to complete\r",
+									"setTimeout(function() {}, 100);\r",
+									"\r",
+									"pm.sendRequest({\r",
+									"    url: base_url + \"/login\",\r",
+									"    method: 'POST',\r",
+									"    header: {\r",
+									"        'Content-Type': 'application/json'\r",
+									"    },\r",
+									"    body: {\r",
+									"        mode: 'raw',\r",
+									"        raw: JSON.stringify({\r",
+									"            username: 'bob',\r",
+									"            password: 'bobpass'\r",
+									"        })\r",
+									"    }\r",
+									"}, function (err, res) {\r",
+									"    if (!err && res.code === 200) {\r",
+									"        const token = res.json().access_token;\r",
+									"        pm.environment.set(\"access_token\", token);\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Delay to allow the async request to complete before main request\r",
+									"const sleep = (ms) => {\r",
+									"    const start = Date.now();\r",
+									"    while (Date.now() - start < ms) {}\r",
+									"};\r",
+									"sleep(500);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201 or 200\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Application created\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property('id');\r",
+									"    pm.expect(jsonData).to.have.property('status');\r",
+									"});\r",
+									"\r",
+									"// Re-initialize database after running test\r",
+									"const base_url = pm.environment.get('base_url');\r",
+									"pm.sendRequest({\r",
+									"    url: base_url + '/init',\r",
+									"    method: 'POST',\r",
+									"    header: {\r",
+									"        'Content-Type': 'application/json'\r",
+									"    }\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/positions/1/apply",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"positions",
+								"1",
+								"apply"
+							]
+						},
+						"description": "Submit an application for a position. Automatically logs in as bob (student). Reinitializes database after test."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/positions/1/apply",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"positions",
+										"1",
+										"apply"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n\t\"id\": 1,\n\t\"student_id\": 1,\n\t\"position_id\": 1,\n\t\"status\": \"pending\",\n\t\"available_actions\": [\"withdraw\"],\n\t\"created_at\": \"2024-01-15T10:30:00\",\n\t\"updated_at\": \"2024-01-15T10:30:00\"\n}"
+						}
+					]
+				},
+				{
+					"name": "(Employer) Create a position",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const base_url = pm.environment.get('base_url');\r",
+									"\r",
+									"// Use setTimeout to add delay, allowing async login to complete\r",
+									"setTimeout(function() {}, 100);\r",
+									"\r",
+									"pm.sendRequest({\r",
+									"    url: base_url + \"/login\",\r",
+									"    method: 'POST',\r",
+									"    header: {\r",
+									"        'Content-Type': 'application/json'\r",
+									"    },\r",
+									"    body: {\r",
+									"        mode: 'raw',\r",
+									"        raw: JSON.stringify({\r",
+									"            username: 'frank',\r",
+									"            password: 'frankpass'\r",
+									"        })\r",
+									"    }\r",
+									"}, function (err, res) {\r",
+									"    if (!err && res.code === 200) {\r",
+									"        const token = res.json().access_token;\r",
+									"        pm.environment.set(\"access_token\", token);\r",
+									"    }\r",
+									"});\r",
+									"\r",
+									"// Delay to allow the async request to complete before main request\r",
+									"const sleep = (ms) => {\r",
+									"    const start = Date.now();\r",
+									"    while (Date.now() - start < ms) {}\r",
+									"};\r",
+									"sleep(500);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Position created with required fields\", function () {\r",
+									"    const jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.property('id');\r",
+									"    pm.expect(jsonData).to.have.property('title');\r",
+									"    pm.expect(jsonData).to.have.property('status');\r",
+									"    pm.expect(jsonData.status).to.eql('open');\r",
+									"});\r",
+									"\r",
+									"// Re-initialize database after running test\r",
+									"const base_url = pm.environment.get('base_url');\r",
+									"pm.sendRequest({\r",
+									"    url: base_url + '/init',\r",
+									"    method: 'POST',\r",
+									"    header: {\r",
+									"        'Content-Type': 'application/json'\r",
+									"    }\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"title\": \"Data Analyst\",\n\t\"description\": \"Analyze data and create reports\",\n\t\"number\": 2\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/positions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"positions"
+							]
+						},
+						"description": "Create a new internship position. Automatically logs in as frank (employer). Reinitializes database after test."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"title\": \"Data Analyst\",\n\t\"description\": \"Analyze data and create reports\",\n\t\"number\": 2\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/positions",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"positions"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n\t\"id\": 2,\n\t\"title\": \"Data Analyst\",\n\t\"description\": \"Analyze data and create reports\",\n\t\"number_of_positions\": 2,\n\t\"status\": \"open\",\n\t\"company_id\": 1,\n\t\"created_by\": 3\n}"
+						},
+						{
+							"name": "Missing Required Fields",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"description\": \"Missing title and number\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/positions",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"positions"
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n\t\"error\": \"Missing required fields\"\n}"
+						}
+					]
+				}
+			],
+			"description": "Manage internship positions. Public endpoints for viewing positions. Employers can create, edit, and close positions. Students can apply for positions.",
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{access_token}}",
+						"type": "string"
+					}
+				]
+			}
+		}
+	]
+}
