@@ -1,8 +1,5 @@
-from flask import Blueprint, render_template, jsonify, request, flash, send_from_directory, flash, redirect, url_for
+from flask import Blueprint, render_template, jsonify, request, flash, redirect
 from flask_jwt_extended import jwt_required, current_user, unset_jwt_cookies, set_access_cookies
-
-
-from.index import index_views
 
 from App.controllers import (
     login,
@@ -12,11 +9,7 @@ from App.controllers import (
 auth_views = Blueprint('auth_views', __name__, template_folder='../templates')
 
 
-
-
-'''
-Page/Action Routes
-'''
+# Page/Action Routes
 
 @auth_views.route('/identify', methods=['GET'])
 @jwt_required()
@@ -30,7 +23,7 @@ def login_action():
     token = login(data['username'], data['password'])
     response = redirect(request.referrer)
     if not token:
-        flash('Bad username or password given'), 401
+        flash('Bad username or password given')
     else:
         flash('Login Successful')
         set_access_cookies(response, token)
@@ -42,7 +35,7 @@ def signup_action():
     status = create_user(data['username'], data['password'], data['type'])
     response = redirect(request.referrer)
     if not status:
-        flash('Signup failed, username taken!'), 401
+        flash('Signup failed, username taken!')
     else:
         token = login(data['username'], data['password'])
         flash('Signup Successful')
@@ -57,9 +50,7 @@ def logout_action():
     unset_jwt_cookies(response)
     return response
 
-'''
-API Routes
-'''
+# API Routes
 
 @auth_views.route('/api/login', methods=['POST'])
 def user_login_api():

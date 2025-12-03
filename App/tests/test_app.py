@@ -815,3 +815,494 @@ class ApplicationIntegrationTests(unittest.TestCase):
         assert 'shortlist' not in actions
         assert 'accept' not in actions
         assert 'withdraw' not in actions
+
+# Endpoint tests for Position Management functionality including authorization
+
+def test_get_open_positions_only(empty_db):
+         client = empty_db
+
+         company = create_company("Positions CO", "For testing positions")
+         employer = create_user("pos_employer","pass","employer", company_id=company.id)
+         assert employer is not None
+
+         open_pos = open_position(
+             user_id=employer.id,
+             title="Open Position",
+             number_of_positions=3,
+             description="This one is open",
+         )
+         assert open_pos is not None
+
+         closed_pos = open_position(
+             user_id=employer.id,
+             title="Closed Position",
+             number_of_positions=1,
+             description="This one is closed",
+         )
+         assert closed_pos is not None
+         closed_pos.status = PositionStatus.CLOSED
+         db.session.commit()
+
+         res = client.get('/api/positions')
+
+         assert res.status_code == 200
+         data = res.get_json()
+
+         assert isinstance(data, list)
+         assert len(data) == 1
+         assert data[0]["id"] == open_pos.id
+         assert data[0]["status"] == PositionStatus.OPEN.value
+         assert data[0]["title"] == "Open Position"
+
+def test_get_position_details_success_and_not_found(empty_db):
+    """
+    /api/positions/<id> should return the position details for a valid id
+    and 404 with an error message for an invalid id.
+    """
+    client = empty_db
+
+    company = create_company("Details Co", "For testing position details")
+    employer = create_user("details_employer", "pass", "employer", company_id=company.id)
+    assert employer is not None
+
+    position = open_position(
+        user_id=employer.id,
+        title="Backend Intern",
+        number_of_positions=2,
+        description="Backend role"
+    )
+    assert position is not None
+
+    #success case
+    res = client.get(f'/api/positions/{position.id}')
+    assert res.status_code == 200
+
+    data = res.get_json()
+    assert data["id"] == position.id
+    assert data["title"] == "Backend Intern"
+    assert data["description"] == "Backend role"
+    assert data["company_id"] == company.id
+    assert data["created_by"] == employer.id
+
+    #not found case
+    res_not_found = client.get(f'/api/positions/{position.id + 1}')
+    assert res_not_found.status_code == 404
+
+    not_found_data = res_not_found.get_json()
+    assert "error" in not_found_data
+    assert not_found_data["error"] == "Position not found"
+
+def test_employer_can_edit_own_position(empty_db):
+    client = empty_db
+
+    company = create_company("Edit Co", "Company for editing tests")
+    employer = create_user("edit_emp", "pass", "employer", company_id=company.id)
+    assert employer is not None
+
+    position = open_position(
+        user_id=employer.id,
+        title="Original Title",
+        number_of_positions=2,
+        description="Original description"
+    )
+    assert position is not None
+
+    token = login("edit_emp", "pass")
+    assert token is not None
+
+    payload = {
+        "title": "Updated Title",
+        "number": 5,
+        "description": "Updated description"
+    }
+
+    res = client.put(
+        f"/api/positions/{position.id}",
+        json=payload,
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert res.status_code == 200
+    data = res.get_json()
+
+    assert data["id"] == position.id
+    assert data["title"] == "Updated Title"
+    assert data["number_of_positions"] == 5
+    assert data["description"] == "Updated description"
+
+    updated = db.session.get(Position, position.id)
+    assert updated.title == "Updated Title"
+    assert updated.number_of_positions == 5
+    assert updated.description == "Updated description"
+
+def test_employer_cannot_edit_another_employers_position(empty_db):
+    client = empty_db
+
+    company1 = create_company("Co1", "First company")
+    company2 = create_company("Co2", "Second company")
+
+    owner = create_user("owner_emp", "pass", "employer", company_id=company1.id)
+    other = create_user("other_emp", "pass", "employer", company_id=company2.id)
+    assert owner is not None and other is not None
+
+    position = open_position(
+        user_id=owner.id,
+        title="Owner Title",
+        number_of_positions=1,
+        description="Owner's position"
+    )
+    assert position is not None
+
+    token = login("other_emp", "pass")
+    assert token is not None
+
+    payload = {"title": "Hacked Title"}
+
+    res = client.put(
+        f"/api/positions/{position.id}",
+        json=payload,
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert res.status_code == 403
+    data = res.get_json()
+    assert "error" in data
+    assert data["error"] == "Forbidden"
+
+    unchanged = db.session.get(Position, position.id)
+    assert unchanged.title == "Owner Title"
+
+def test_employer_can_close_own_position(empty_db):
+    client = empty_db
+
+    company = create_company("Close Co", "Company for close tests")
+    employer = create_user("closer_emp", "pass", "employer", company_id=company.id)
+    assert employer is not None
+
+    position = open_position(
+        user_id=employer.id,
+        title="Closable Position",
+        number_of_positions=2,
+        description="To be closed"
+    )
+    assert position is not None
+    assert position.status == PositionStatus.OPEN
+
+    token = login("closer_emp", "pass")
+    assert token is not None
+
+    res = client.put(
+        f"/api/positions/{position.id}/close",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert res.status_code == 200
+    data = res.get_json()
+    assert data["id"] == position.id
+    assert data["status"] == PositionStatus.CLOSED.value
+
+    updated = db.session.get(Position, position.id)
+    assert updated.status == PositionStatus.CLOSED
+
+def test_employer_cannot_close_another_employers_position(empty_db):
+    client = empty_db
+
+    company1 = create_company("Owner Co", "Owner company")
+    company2 = create_company("Other Co", "Other company")
+
+    owner = create_user("owner_closer", "pass", "employer", company_id=company1.id)
+    other = create_user("other_closer", "pass", "employer", company_id=company2.id)
+    assert owner is not None and other is not None
+
+    position = open_position(
+        user_id=owner.id,
+        title="Owner Position",
+        number_of_positions=1
+    )
+    assert position is not None
+    assert position.status == PositionStatus.OPEN
+
+    token = login("other_closer", "pass")
+    assert token is not None
+
+    res = client.put(
+        f"/api/positions/{position.id}/close",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert res.status_code == 403
+    data = res.get_json()
+    assert "error" in data
+    assert data["error"] == "Forbidden"
+
+    unchanged = db.session.get(Position, position.id)
+    assert unchanged.status == PositionStatus.OPEN
+
+def test_close_nonexistent_position_returns_404(empty_db):
+    client = empty_db
+
+    company = create_company("Ghost Co", "For 404 test")
+    employer = create_user("ghost_emp", "pass", "employer", company_id=company.id)
+    assert employer is not None
+
+    token = login("ghost_emp", "pass")
+    assert token is not None
+
+    res = client.put(
+        "/api/positions/9999/close",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert res.status_code == 404
+    data = res.get_json()
+    assert "error" in data
+    assert data["error"] == "Position not found"
+
+def test_student_can_apply_for_open_position(empty_db):
+    client = empty_db
+
+    company = create_company("Apply Co", "For apply endpoint tests")
+    employer = create_user("apply_emp", "pass", "employer", company_id=company.id)
+    student = create_user("apply_student", "pass", "student")
+
+    assert employer is not None
+    assert student is not None
+
+    position = open_position(
+        user_id=employer.id,
+        title="Graduate Developer",
+        number_of_positions=3,
+        description="Entry-level dev role"
+    )
+    assert position is not None
+
+    token = login("apply_student", "pass")
+    assert token is not None
+
+    res = client.post(
+        f"/api/positions/{position.id}/apply",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert res.status_code == 201
+    data = res.get_json()
+
+    assert data["student_id"] == student.id
+    assert data["position_id"] == position.id
+
+    application = Application.query.filter_by(
+        student_id=student.id,
+        position_id=position.id
+    ).first()
+    assert application is not None
+
+def test_student_cannot_apply_twice_to_same_position(empty_db):
+    client = empty_db
+
+    company = create_company("Dup Apply Co", "For duplicate apply tests")
+    employer = create_user("dup_apply_emp", "pass", "employer", company_id=company.id)
+    student = create_user("dup_apply_student", "pass", "student")
+
+    position = open_position(
+        user_id=employer.id,
+        title="Data Intern",
+        number_of_positions=1
+    )
+    assert position is not None
+
+    token = login("dup_apply_student", "pass")
+    assert token is not None
+
+    res1 = client.post(
+        f"/api/positions/{position.id}/apply",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert res1.status_code == 201
+
+    res2 = client.post(
+        f"/api/positions/{position.id}/apply",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert res2.status_code == 400
+    data2 = res2.get_json()
+    assert "error" in data2
+    assert data2["error"] == "Application already exists"
+
+    apps = Application.query.filter_by(
+        student_id=student.id,
+        position_id=position.id
+    ).all()
+    assert len(apps) == 1
+
+def test_non_student_cannot_apply_for_position(empty_db):
+    client = empty_db
+
+    company = create_company("Role Co", "For role test")
+    employer = create_user("role_emp", "pass", "employer", company_id=company.id)
+    assert employer is not None
+
+    position = open_position(
+        user_id=employer.id,
+        title="Sec Engineer",
+        number_of_positions=1
+    )
+    assert position is not None
+
+    token = login("role_emp", "pass")
+    assert token is not None
+
+    res = client.post(
+        f"/api/positions/{position.id}/apply",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert res.status_code == 403
+
+def test_student_cannot_apply_to_closed_position(empty_db):
+    client = empty_db
+
+    company = create_company("Closed Co", "For closed position test")
+    employer = create_user("closed_emp", "pass", "employer", company_id=company.id)
+    student = create_user("closed_student", "pass", "student")
+
+    position = open_position(
+        user_id=employer.id,
+        title="Closed Job",
+        number_of_positions=1
+    )
+    assert position is not None
+
+    position.status = PositionStatus.CLOSED
+    db.session.commit()
+
+    token = login("closed_student", "pass")
+    assert token is not None
+
+    res = client.post(
+        f"/api/positions/{position.id}/apply",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert res.status_code == 400
+    data = res.get_json()
+    assert "error" in data
+    assert data["error"] == "Position is not open"
+
+def test_employer_can_create_position_via_api(empty_db):
+    client = empty_db
+
+    company = create_company("Create Co", "For create endpoint tests")
+    employer = create_user("create_emp", "pass", "employer", company_id=company.id)
+    assert employer is not None
+
+    token = login("create_emp", "pass")
+    assert token is not None
+
+    payload = {
+        "title": "API Created Position",
+        "number": 3,
+        "description": "Created via /api/positions"
+    }
+
+    res = client.post(
+        "/api/positions",
+        json=payload,
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert res.status_code == 201
+    data = res.get_json()
+
+    assert data["title"] == "API Created Position"
+    assert data["number_of_positions"] == 3
+    assert data["description"] == "Created via /api/positions"
+    assert data["company_id"] == company.id
+    assert data["created_by"] == employer.id
+
+    created = Position.query.filter_by(title="API Created Position").first()
+    assert created is not None
+    assert created.number_of_positions == 3
+
+def test_student_cannot_create_position(empty_db):
+    client = empty_db
+
+    company = create_company("Role Co", "For role restriction test")
+    student = create_user("create_student", "pass", "student")
+    assert student is not None
+
+    token = login("create_student", "pass")
+    assert token is not None
+
+    payload = {
+        "title": "Should Not Exist",
+        "number": 1,
+        "description": "Student trying to create a position"
+    }
+
+    res = client.post(
+        "/api/positions",
+        json=payload,
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert res.status_code == 403
+
+def test_create_position_missing_fields_returns_400(empty_db):
+    client = empty_db
+
+    company = create_company("Bad Payload Co", "For bad payload test")
+    employer = create_user("badpayload_emp", "pass", "employer", company_id=company.id)
+    assert employer is not None
+
+    token = login("badpayload_emp", "pass")
+    assert token is not None
+
+    payload = {
+        "title": "Incomplete Position"
+    }
+
+    res = client.post(
+        "/api/positions",
+        json=payload,
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert res.status_code == 400
+    data = res.get_json()
+    assert "error" in data
+    assert data["error"] == "Missing required fields"
+
+def test_get_company_positions_returns_only_that_companys_positions(empty_db):
+    client = empty_db
+
+    company1 = create_company("Company One", "First company")
+    company2 = create_company("Company Two", "Second company")
+
+    emp1 = create_user("comp1_emp", "pass", "employer", company_id=company1.id)
+    emp2 = create_user("comp2_emp", "pass", "employer", company_id=company2.id)
+
+    pos1_a = open_position(user_id=emp1.id, title="C1 Position A", number_of_positions=1)
+    pos1_b = open_position(user_id=emp1.id, title="C1 Position B", number_of_positions=2)
+
+    pos2_a = open_position(user_id=emp2.id, title="C2 Position A", number_of_positions=3)
+
+    assert pos1_a is not None and pos1_b is not None and pos2_a is not None
+
+    res = client.get(f"/api/positions/company/{company1.id}")
+    assert res.status_code == 200
+
+    data = res.get_json()
+    assert isinstance(data, list)
+
+    returned_ids = {p["id"] for p in data}
+    assert pos1_a.id in returned_ids
+    assert pos1_b.id in returned_ids
+    assert pos2_a.id not in returned_ids
+
+    assert all(p["company_id"] == company1.id for p in data)
+
+
+
+
+
