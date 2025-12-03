@@ -61,7 +61,7 @@ class Application(db.Model):
     def get_available_actions(self) -> list[str]:
         return self._get_state().get_available_actions()
 
-    def toJSON(self):
+    def get_json(self):
         return {
             'id': self.id,
             'student_id': self.student_id,
@@ -72,3 +72,6 @@ class Application(db.Model):
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
+
+    # Alias for backwards compatibility
+    toJSON = get_json

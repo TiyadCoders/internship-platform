@@ -1,5 +1,4 @@
 from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required
 from App.controllers import (
     create_company,
     get_company,
@@ -13,7 +12,6 @@ company_views = Blueprint('company_views', __name__)
 
 
 @company_views.route('/api/company', methods=['POST'])
-@jwt_required()
 @require_role('staff')
 def create_company_route():
     data = request.json
@@ -27,7 +25,6 @@ def create_company_route():
 
 
 @company_views.route('/api/company/<int:id>', methods=['GET'])
-@jwt_required()
 def get_company_by_id(id):
     company = get_company(id)
     if company:
@@ -37,14 +34,12 @@ def get_company_by_id(id):
 
 
 @company_views.route('/api/companies', methods=['GET'])
-@jwt_required()
 def get_all_companies_route():
     companies = get_all_companies()
     return jsonify([company.get_json() for company in companies]), 200
 
 
 @company_views.route('/api/company/<int:id>', methods=['PUT'])
-@jwt_required()
 @require_role('staff')
 def update_company_route(id):
     data = request.json
@@ -58,7 +53,6 @@ def update_company_route(id):
 
 
 @company_views.route('/api/company/<int:id>', methods=['DELETE'])
-@jwt_required()
 @require_role('staff')
 def delete_company_route(id):
     result = delete_company(id)

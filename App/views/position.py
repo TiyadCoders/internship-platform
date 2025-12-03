@@ -23,25 +23,6 @@ def get_all_positions():
     position_list = get_all_positions_json()
     return jsonify(position_list), 200
 
-@position_views.route('/api/positions/create', methods=['POST'])
-@require_role('employer')
-def create_position():
-    data = request.json
-    if not data or 'title' not in data or 'number' not in data:
-        return jsonify({"error": "Missing required fields"}), 400
-    description = data.get('description', None)
-    position = open_position(
-        title=data['title'],
-        user_id=current_user.id,
-        number_of_positions=data['number'],
-        description=description
-    )
-
-    if position:
-        return jsonify(position.get_json()), 201
-    else:
-        return jsonify({"error": "Failed to create position"}), 400
-
 @position_views.route('/api/employer/positions', methods=['GET'])
 @require_role('employer')
 def get_employer_positions():
@@ -123,14 +104,7 @@ def apply_for_position_route(position_id):
     if not result:
         return jsonify({"error": "Failed to apply for position"}), 400
 
-    app_json = {
-        "id": result.id,
-        "student_id": result.student_id,
-        "position_id": result.position_id,
-        "updated_by": result.updated_by,
-        "status": result.status.name if hasattr(result.status, "name") else result.status
-    }
-    return jsonify(app_json), 201
+    return jsonify(result.get_json()), 201
 
 @position_views.route('/api/positions', methods=['POST'])
 @require_role('employer')

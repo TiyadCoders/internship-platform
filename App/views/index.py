@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, jsonify
+from flask import Blueprint, jsonify, render_template
 from App.controllers import initialize
 
 index_views = Blueprint('index_views', __name__, template_folder='../templates')
