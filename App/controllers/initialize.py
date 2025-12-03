@@ -1,3 +1,4 @@
+from datetime import date
 from .user import create_user
 from .application import create_application
 from .position import open_position
@@ -10,7 +11,18 @@ def initialize():
     db.create_all()
     # Create a company first
     company = create_company('Default Company', 'The default company for testing')
-    create_user('bob', 'bobpass', "student")
+
+    # Create student with required student data
+    student_data = {
+        'email': 'bob@example.com',
+        'dob': date(2000, 1, 15),
+        'gender': 'Male',
+        'degree': 'Computer Science',
+        'phone': '555-1234',
+        'gpa': 3.5,
+        'resume': '/uploads/bob_resume.pdf'
+    }
+    create_user('bob', 'bobpass', "student", student_data=student_data)
     create_user('frank', 'frankpass', "employer", company_id=company.id)
     create_user('john', 'johnpass', "staff", company_id=company.id)
     open_position(user_id=2, title='Software Engineer', number_of_positions=6)
