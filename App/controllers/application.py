@@ -13,8 +13,14 @@ __all__ = [
     'add_student_to_shortlist',
     'get_shortlist_by_student',
     'get_applications',
-    'withdraw_application'
+    'withdraw_application',
+    'staff_can_access_application',
 ]
+
+
+def staff_can_access_application(staff_user, application):
+    """Check if staff member can access this application (same company)."""
+    return application.position.employer.company_id == staff_user.company_id
 
 def create_application(student_id, position_id, updated_by=None):
     """Create a new application for a student to a position."""

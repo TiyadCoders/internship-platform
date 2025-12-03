@@ -8,16 +8,12 @@ from App.controllers import (
     get_application,
     get_applications,
     require_role,
-    withdraw_application
+    withdraw_application,
+    get_position,
+    staff_can_access_application,
 )
-from App.database import db
 
 application_views = Blueprint('application_views', __name__)
-
-
-def _staff_can_access_application(staff_user, application):
-    """Check if staff member can access this application (same company)."""
-    return application.position.employer.company_id == staff_user.company_id
 
 
 @application_views.route('/api/applications', methods=['GET'])
@@ -40,7 +36,7 @@ def view_application(application_id):
         if application.student_id != current_user.id:
             return jsonify({"error": "Unauthorized"}), 403
     elif current_user.role == "staff":
-        if not _staff_can_access_application(current_user, application):
+        if not staff_can_access_application(current_user, application):
             return jsonify({"error": "Unauthorized"}), 403
     return jsonify(application.get_json()), 200
 
@@ -52,7 +48,7 @@ def shortlist_application_route(application_id):
     application = get_application(application_id)
     if not application:
         return jsonify({"error": "Application not found"}), 404
-    if not _staff_can_access_application(current_user, application):
+    if not staff_can_access_application(current_user, application):
         return jsonify({"error": "Unauthorized"}), 403
     result = shortlist_application(application_id)
     if isinstance(result, dict) and 'error' in result:
@@ -67,7 +63,7 @@ def accept_application_route(application_id):
     application = get_application(application_id)
     if not application:
         return jsonify({"error": "Application not found"}), 404
-    if not _staff_can_access_application(current_user, application):
+    if not staff_can_access_application(current_user, application):
         return jsonify({"error": "Unauthorized"}), 403
     result = accept_application(application_id)
     if isinstance(result, dict) and 'error' in result:
@@ -82,7 +78,7 @@ def reject_application_route(application_id):
     application = get_application(application_id)
     if not application:
         return jsonify({"error": "Application not found"}), 404
-    if not _staff_can_access_application(current_user, application):
+    if not staff_can_access_application(current_user, application):
         return jsonify({"error": "Unauthorized"}), 403
     result = reject_application(application_id)
     if isinstance(result, dict) and 'error' in result:
@@ -110,8 +106,7 @@ def withdraw_application_route(application_id):
 @require_role('staff')
 def view_applications_by_position(position_id):
     """View applications by position ID (staff only)."""
-    from App.models import Position
-    position = db.session.get(Position, position_id)
+    position = get_position(position_id)
     if not position:
         return jsonify({"error": "Position not found"}), 404
     # Authorization: staff can only view applications for their company's positions

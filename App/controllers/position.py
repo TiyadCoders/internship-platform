@@ -24,28 +24,18 @@ def open_position(user_id, title, number_of_positions=1, description=None):
 
 
 def get_positions_by_employer(user_id):
-    employer = Employer.query.filter_by(id=user_id).first()
-    if not employer:
-        return []
-    return db.session.query(Position).filter_by(created_by=employer.id).all()
+    return db.session.query(Position).filter_by(created_by=user_id).all()
 
 def get_all_positions():
-    return Position.query.all()
+    return db.session.query(Position).all()
 
 def get_all_positions_json():
     positions = get_all_positions()
-    if positions:
-        return [position.get_json() for position in positions]
-    return []
+    return [p.get_json() for p in positions]
 
 def get_positions_by_employer_json(user_id):
-    employer = Employer.query.filter_by(id=user_id).first()
-    if not employer:
-        return []
-    positions = db.session.query(Position).filter_by(created_by=employer.id).all()
-    if positions:
-        return [position.get_json() for position in positions]
-    return []
+    positions = get_positions_by_employer(user_id)
+    return [p.get_json() for p in positions]
 
 def update_position_status(position_id, status):
     position = db.session.get(Position, position_id)
@@ -84,14 +74,11 @@ def delete_position(position_id):
         return False
 
 def get_open_positions():
-    return Position.query.filter_by(status=PositionStatus.OPEN).all()
-
+    return db.session.query(Position).filter_by(status=PositionStatus.OPEN).all()
 
 def get_open_positions_json():
     positions = get_open_positions()
-    if positions:
-        return [position.get_json() for position in positions]
-    return []
+    return [p.get_json() for p in positions]
 
 def get_position(position_id):
     return db.session.get(Position, position_id)
@@ -130,7 +117,7 @@ def apply_for_position(student_id, position_id):
     if position.status != PositionStatus.OPEN:
         return {"error": "Position is not open"}
 
-    existing = Application.query.filter_by(
+    existing = db.session.query(Application).filter_by(
         student_id=student_id,
         position_id=position_id
     ).first()
@@ -140,7 +127,7 @@ def apply_for_position(student_id, position_id):
     application = Application(
         student_id=student_id,
         position_id=position_id,
-        updated_by=student_id  
+        updated_by=None
     )
 
     try:
@@ -152,11 +139,8 @@ def apply_for_position(student_id, position_id):
         return None
 
 def get_positions_by_company(company_id):
-    return Position.query.filter_by(company_id=company_id).all()
-
+    return db.session.query(Position).filter_by(company_id=company_id).all()
 
 def get_positions_by_company_json(company_id):
     positions = get_positions_by_company(company_id)
-    if positions:
-        return [p.get_json() for p in positions]
-    return []
+    return [p.get_json() for p in positions]
