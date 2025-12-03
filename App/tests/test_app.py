@@ -816,6 +816,93 @@ class ApplicationIntegrationTests(unittest.TestCase):
         assert 'accept' not in actions
         assert 'withdraw' not in actions
 
+#User Management endpoint tests
+def test_employer_can_view_student_details(empty_db):
+        client = empty_db
+
+        company = create_company("Student View Co", "For student view tests")
+        employer = create_user("view_emp", "pass", "employer", company_id=company.id)
+        student = create_user("view_student", "pass", "student")
+
+        assert employer is not None
+        assert student is not None
+
+        token = login("view_emp", "pass")
+        assert token is not None
+
+        res = client.get(
+            f"/api/student/{student.id}",
+            headers={"Authorization": f"Bearer {token}"}
+        )
+
+        assert res.status_code == 200
+        data = res.get_json()
+        assert data["id"] == student.id
+        assert data["username"] == "view_student"
+        assert data["role"] == "student"
+        assert data["type"] == "Student"
+
+def test_staff_can_view_student_details(empty_db):
+        client = empty_db
+
+        company = create_company("Staff View Co", "For staff view tests")
+        staff = create_user("view_staff", "pass", "staff", company_id=company.id)
+        student = create_user("view_student2", "pass", "student")
+
+        token = login("view_staff", "pass")
+        assert token is not None
+
+        res = client.get(
+            f"/api/student/{student.id}",
+            headers={"Authorization": f"Bearer {token}"}
+        )
+
+        assert res.status_code == 200
+        data = res.get_json()
+        assert data["id"] == student.id
+        assert data["username"] == "view_student2"
+        assert data["role"] == "student"
+
+def test_student_cannot_view_student_details(empty_db):
+        client = empty_db
+
+        student1 = create_user("stud1", "pass", "student")
+        student2 = create_user("stud2", "pass", "student")
+
+        token = login("stud1", "pass")
+        assert token is not None
+
+        res = client.get(
+            f"/api/student/{student2.id}",
+            headers={"Authorization": f"Bearer {token}"}
+        )
+
+        assert res.status_code == 403
+        data = res.get_json()
+        assert "error" in data
+        assert data["error"] == "Forbidden"
+
+def test_get_student_details_not_found(empty_db):
+        client = empty_db
+
+        company = create_company("NF Co", "For 404 test")
+        employer = create_user("nf_emp", "pass", "employer", company_id=company.id)
+
+        token = login("nf_emp", "pass")
+        assert token is not None
+
+        res = client.get(
+            "/api/student/9999",
+            headers={"Authorization": f"Bearer {token}"}
+        )
+
+        assert res.status_code == 404
+        data = res.get_json()
+        assert "error" in data
+        assert data["error"] == "Student not found"
+
+
+
 # Endpoint tests for Position Management functionality including authorization
 
 def test_get_open_positions_only(empty_db):

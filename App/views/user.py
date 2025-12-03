@@ -1,9 +1,16 @@
 from flask import Blueprint, render_template, jsonify, request, send_from_directory, flash, redirect, url_for
+from flask_jwt_extended import jwt_required, current_user as jwt_current_user
+
+from.index import index_views
+
+from App.models import Student
 
 from App.controllers import (
     create_user,
     get_all_users,
     get_all_users_json,
+    jwt_required,
+    get_user
 )
 
 user_views = Blueprint('user_views', __name__, template_folder='../templates')
@@ -37,4 +44,19 @@ def create_user_endpoint():
 
 @user_views.route('/static/users', methods=['GET'])
 def static_user_page():
-    return send_from_directory('static', 'static-user.html')
+  return send_from_directory('static', 'static-user.html')
+
+@user_views.route('/api/student/<int:student_id>', methods=['GET'])
+@jwt_required()
+def get_student_details(student_id):
+    if jwt_current_user.role not in ['employer', 'staff']:
+        return jsonify({"error": "Forbidden"}), 403
+
+    user = get_user(student_id)
+    if not user or not isinstance(user, Student):
+        return jsonify({"error": "Student not found"}), 404
+
+    data = user.get_json()
+    data["type"] = "Student"
+
+    return jsonify(data), 200
