@@ -329,7 +329,7 @@ def empty_db():
 class UserIntegrationTests(unittest.TestCase):
     def test_position_with_and_without_description(self):
         company = create_company("Test Company", "A test company")
-        employer = create_user("descemp", "descpass", "employer", company_id=company.id)
+        employer, _ = create_user("descemp", "descpass", "employer", company_id=company.id)
         assert employer is not None
         # With description
         pos_with_desc = open_position(user_id=employer.id, title="Described Position", number_of_positions=1, description="A position with a description")
@@ -346,16 +346,16 @@ class UserIntegrationTests(unittest.TestCase):
         assert company is not None
 
         # Test that create_user creates the correct subclass instances
-        staff = create_user("rick", "bobpass", "staff", company_id=company.id)
+        staff, error = create_user("rick", "bobpass", "staff", company_id=company.id)
         assert staff.username == "rick"
 
-        employer = create_user("sam", "sampass", "employer", company_id=company.id)
+        employer, error = create_user("sam", "sampass", "employer", company_id=company.id)
         assert employer.username == "sam"
         assert employer.role == "employer"
         assert isinstance(employer, Employer)
         assert isinstance(employer, User)
 
-        student = create_user("hannah", "hannahpass", "student")
+        student, error = create_user("hannah", "hannahpass", "student")
         assert student.username == "hannah"
 
    # def test_get_all_users_json(self):
@@ -377,9 +377,9 @@ class UserIntegrationTests(unittest.TestCase):
         company = create_company("Test Company", "A test company")
 
         # Test that querying User returns appropriate subclass instances
-        staff = create_user("rick", "bobpass", "staff", company_id=company.id)
-        employer = create_user("sam", "sampass", "employer", company_id=company.id)
-        student = create_user("hannah", "hannahpass", "student")
+        staff, _ = create_user("rick", "bobpass", "staff", company_id=company.id)
+        employer, _ = create_user("sam", "sampass", "employer", company_id=company.id)
+        student, _ = create_user("hannah", "hannahpass", "student")
 
         # Query by user ID should return the correct subclass
         queried_staff = db.session.get(User, staff.id)
@@ -400,9 +400,9 @@ class UserIntegrationTests(unittest.TestCase):
         company = create_company("Test Company", "A test company")
 
         # Test that querying by subclass only returns instances of that subclass
-        create_user("rick", "bobpass", "staff", company_id=company.id)
-        create_user("sam", "sampass", "employer", company_id=company.id)
-        create_user("hannah", "hannahpass", "student")
+        _, _ = create_user("rick", "bobpass", "staff", company_id=company.id)
+        _, _ = create_user("sam", "sampass", "employer", company_id=company.id)
+        _, _ = create_user("hannah", "hannahpass", "student")
 
         # Query specific subclasses
         all_staff = Staff.query.all()
@@ -423,14 +423,14 @@ class UserIntegrationTests(unittest.TestCase):
         company = create_company("Test Company", "A test company")
 
         # Test that relationships still work correctly after inheritance
-        employer = create_user("sam", "sampass", "employer", company_id=company.id)
+        employer, _ = create_user("sam", "sampass", "employer", company_id=company.id)
         assert employer is not None
         assert hasattr(employer, 'positions')
         assert isinstance(employer.positions, list)
 
     def test_new_position(self):
         company = create_company("Test Company", "A test company")
-        employer = create_user("sally", "sallypass", "employer", company_id=company.id)
+        employer, _ = create_user("sally", "sallypass", "employer", company_id=company.id)
         assert employer is not None
         position = open_position(user_id=employer.id, title="IT Support", number_of_positions=2, description="Help with IT issues")
         assert position is not None
@@ -443,7 +443,7 @@ class UserIntegrationTests(unittest.TestCase):
         company = create_company("Test Company", "A test company")
 
         position_count = 2
-        employer = create_user("sally", "sallypass", "employer", company_id=company.id)
+        employer, _ = create_user("sally", "sallypass", "employer", company_id=company.id)
         assert employer is not None
         assert isinstance(employer, Employer)
 
@@ -463,15 +463,15 @@ class UserIntegrationTests(unittest.TestCase):
         company = create_company("Test Company", "A test company")
 
         position_count = 3
-        staff = create_user("linda", "lindapass", "staff", company_id=company.id)
+        staff, _ = create_user("linda", "lindapass", "staff", company_id=company.id)
         assert staff is not None
         assert isinstance(staff, Staff)
 
-        student = create_user("hank", "hankpass", "student")
+        student, _ = create_user("hank", "hankpass", "student")
         assert student is not None
         assert isinstance(student, Student)
 
-        employer = create_user("ken", "kenpass", "employer", company_id=company.id)
+        employer, _ = create_user("ken", "kenpass", "employer", company_id=company.id)
         assert employer is not None
         assert isinstance(employer, Employer)
 
@@ -490,15 +490,15 @@ class UserIntegrationTests(unittest.TestCase):
         company = create_company("Test Company", "A test company")
 
         position_count = 3
-        student = create_user("jack", "jackpass", "student")
+        student, _ = create_user("jack", "jackpass", "student")
         assert student is not None
         assert isinstance(student, Student)
 
-        staff = create_user("pat", "patpass", "staff", company_id=company.id)
+        staff, _ = create_user("pat", "patpass", "staff", company_id=company.id)
         assert staff is not None
         assert isinstance(staff, Staff)
 
-        employer = create_user("frank", "pass", "employer", company_id=company.id)
+        employer, _ = create_user("frank", "pass", "employer", company_id=company.id)
         assert employer is not None
         assert isinstance(employer, Employer)
 
@@ -522,15 +522,15 @@ class UserIntegrationTests(unittest.TestCase):
         # Create a company first for staff and employer
         company = create_company("Test Company", "A test company")
 
-        student = create_user("john", "johnpass", "student")
+        student, _ = create_user("john", "johnpass", "student")
         assert student is not None
         assert isinstance(student, Student)
 
-        staff = create_user("tim", "timpass", "staff", company_id=company.id)
+        staff, _ = create_user("tim", "timpass", "staff", company_id=company.id)
         assert staff is not None
         assert isinstance(staff, Staff)
 
-        employer = create_user("joe", "joepass", "employer", company_id=company.id)
+        employer, _ = create_user("joe", "joepass", "employer", company_id=company.id)
         assert employer is not None
         assert isinstance(employer, Employer)
 
@@ -546,15 +546,15 @@ class UserIntegrationTests(unittest.TestCase):
         company = create_company("Test Company", "A test company")
 
         # Test that username uniqueness is enforced across all User subclasses
-        create_user("john", "pass1", "student")
+        _, _ = create_user("john", "pass1", "student")
 
         # Trying to create another user with same username should fail
-        duplicate_staff = create_user("john", "pass2", "staff", company_id=company.id)
+        duplicate_staff, error = create_user("john", "pass2", "staff", company_id=company.id)
         assert duplicate_staff is None
 
     def test_login_works_with_inheritance(self):
         # Test that login still works correctly with inheritance
-        student = create_user("john", "johnpass", "student")
+        student, _ = create_user("john", "johnpass", "student")
         assert student is not None
 
         # Login should return a token
@@ -570,9 +570,9 @@ class UserIntegrationTests(unittest.TestCase):
         company = create_company("Test Company", "A test company")
 
         # Test that get_user returns the correct subclass instance
-        student = create_user("john", "johnpass", "student")
-        staff = create_user("jane", "janepass", "staff", company_id=company.id)
-        employer = create_user("joe", "joepass", "employer", company_id=company.id)
+        student, _ = create_user("john", "johnpass", "student")
+        staff, _ = create_user("jane", "janepass", "staff", company_id=company.id)
+        employer, _ = create_user("joe", "joepass", "employer", company_id=company.id)
 
         retrieved_student = get_user(student.id)
         retrieved_staff = get_user(staff.id)
@@ -645,8 +645,8 @@ class CompanyIntegrationTests(unittest.TestCase):
     def test_delete_company_cascades_staff_and_employers(self):
         # Create a company with staff and employers
         company = create_company("Cascade Test", "Testing cascade delete")
-        staff = create_user("cascade_staff", "pass", "staff", company_id=company.id)
-        employer = create_user("cascade_employer", "pass", "employer", company_id=company.id)
+        staff, _ = create_user("cascade_staff", "pass", "staff", company_id=company.id)
+        employer, _ = create_user("cascade_employer", "pass", "employer", company_id=company.id)
 
         staff_id = staff.id
         employer_id = employer.id
@@ -662,8 +662,8 @@ class CompanyIntegrationTests(unittest.TestCase):
 
     def test_company_get_json(self):
         company = create_company("JSON Test", "Testing JSON output")
-        staff = create_user("json_staff", "pass", "staff", company_id=company.id)
-        employer = create_user("json_employer", "pass", "employer", company_id=company.id)
+        staff, _ = create_user("json_staff", "pass", "staff", company_id=company.id)
+        employer, _ = create_user("json_employer", "pass", "employer", company_id=company.id)
 
         json_data = company.get_json()
         assert json_data['id'] == company.id
@@ -681,8 +681,8 @@ class ApplicationIntegrationTests(unittest.TestCase):
     def test_withdraw_application_success(self):
         """Test that a student can withdraw their own application."""
         company = create_company("Test Company", "A test company")
-        student = create_user("withdraw_student", "pass", "student")
-        employer = create_user("withdraw_employer", "pass", "employer", company_id=company.id)
+        student, _ = create_user("withdraw_student", "pass", "student")
+        employer, _ = create_user("withdraw_employer", "pass", "employer", company_id=company.id)
         position = open_position(user_id=employer.id, title="Test Position", number_of_positions=2)
 
         application = add_student_to_shortlist(student.id, position.id)
@@ -696,8 +696,8 @@ class ApplicationIntegrationTests(unittest.TestCase):
     def test_cannot_withdraw_accepted_application(self):
         """Test that an accepted application cannot be withdrawn."""
         company = create_company("Test Company", "A test company")
-        student = create_user("accepted_student", "pass", "student")
-        employer = create_user("accepted_employer", "pass", "employer", company_id=company.id)
+        student, _ = create_user("accepted_student", "pass", "student")
+        employer, _ = create_user("accepted_employer", "pass", "employer", company_id=company.id)
         position = open_position(user_id=employer.id, title="Test Position", number_of_positions=2)
 
         application = add_student_to_shortlist(student.id, position.id)
@@ -710,8 +710,8 @@ class ApplicationIntegrationTests(unittest.TestCase):
     def test_staff_cannot_accept_withdrawn_application(self):
         """Test that staff cannot accept a withdrawn application."""
         company = create_company("Test Company", "A test company")
-        student = create_user("withdrawn_student", "pass", "student")
-        employer = create_user("withdrawn_employer", "pass", "employer", company_id=company.id)
+        student, _ = create_user("withdrawn_student", "pass", "student")
+        employer, _ = create_user("withdrawn_employer", "pass", "employer", company_id=company.id)
         position = open_position(user_id=employer.id, title="Test Position", number_of_positions=2)
 
         application = add_student_to_shortlist(student.id, position.id)
@@ -725,8 +725,8 @@ class ApplicationIntegrationTests(unittest.TestCase):
     def test_staff_cannot_shortlist_withdrawn_application(self):
         """Test that staff cannot shortlist a withdrawn application."""
         company = create_company("Test Company", "A test company")
-        student = create_user("shortlist_student", "pass", "student")
-        employer = create_user("shortlist_employer", "pass", "employer", company_id=company.id)
+        student, _ = create_user("shortlist_student", "pass", "student")
+        employer, _ = create_user("shortlist_employer", "pass", "employer", company_id=company.id)
         position = open_position(user_id=employer.id, title="Test Position", number_of_positions=2)
 
         application = add_student_to_shortlist(student.id, position.id)
@@ -739,8 +739,8 @@ class ApplicationIntegrationTests(unittest.TestCase):
     def test_staff_cannot_reject_withdrawn_application(self):
         """Test that staff cannot reject a withdrawn application."""
         company = create_company("Test Company", "A test company")
-        student = create_user("reject_student", "pass", "student")
-        employer = create_user("reject_employer", "pass", "employer", company_id=company.id)
+        student, _ = create_user("reject_student", "pass", "student")
+        employer, _ = create_user("reject_employer", "pass", "employer", company_id=company.id)
         position = open_position(user_id=employer.id, title="Test Position", number_of_positions=2)
 
         application = add_student_to_shortlist(student.id, position.id)
@@ -753,8 +753,8 @@ class ApplicationIntegrationTests(unittest.TestCase):
     def test_no_duplicate_applications(self):
         """Test that a student cannot apply twice to the same position."""
         company = create_company("Test Company", "A test company")
-        student = create_user("dup_student", "pass", "student")
-        employer = create_user("dup_employer", "pass", "employer", company_id=company.id)
+        student, _ = create_user("dup_student", "pass", "student")
+        employer, _ = create_user("dup_employer", "pass", "employer", company_id=company.id)
         position = open_position(user_id=employer.id, title="Test Position", number_of_positions=2)
 
         first_app = add_student_to_shortlist(student.id, position.id)
@@ -767,8 +767,8 @@ class ApplicationIntegrationTests(unittest.TestCase):
     def test_application_available_actions_pending(self):
         """Test available actions for pending application."""
         company = create_company("Test Company", "A test company")
-        student = create_user("actions_student", "pass", "student")
-        employer = create_user("actions_employer", "pass", "employer", company_id=company.id)
+        student, _ = create_user("actions_student", "pass", "student")
+        employer, _ = create_user("actions_employer", "pass", "employer", company_id=company.id)
         position = open_position(user_id=employer.id, title="Test Position", number_of_positions=2)
 
         application = add_student_to_shortlist(student.id, position.id)
@@ -782,8 +782,8 @@ class ApplicationIntegrationTests(unittest.TestCase):
     def test_application_available_actions_withdrawn(self):
         """Test that withdrawn applications have no available actions."""
         company = create_company("Test Company", "A test company")
-        student = create_user("withdrawn_actions", "pass", "student")
-        employer = create_user("withdrawn_actions_emp", "pass", "employer", company_id=company.id)
+        student, _ = create_user("withdrawn_actions", "pass", "student")
+        employer, _ = create_user("withdrawn_actions_emp", "pass", "employer", company_id=company.id)
         position = open_position(user_id=employer.id, title="Test Position", number_of_positions=2)
 
         application = add_student_to_shortlist(student.id, position.id)
@@ -799,8 +799,8 @@ class ApplicationIntegrationTests(unittest.TestCase):
     def test_application_available_actions_accepted(self):
         """Test available actions for accepted application."""
         company = create_company("Test Company", "A test company")
-        student = create_user("accepted_actions", "pass", "student")
-        employer = create_user("accepted_actions_emp", "pass", "employer", company_id=company.id)
+        student, _ = create_user("accepted_actions", "pass", "student")
+        employer, _ = create_user("accepted_actions_emp", "pass", "employer", company_id=company.id)
         position = open_position(user_id=employer.id, title="Test Position", number_of_positions=2)
 
         application = add_student_to_shortlist(student.id, position.id)
@@ -821,8 +821,8 @@ def test_employer_can_view_student_details(empty_db):
         client = empty_db
 
         company = create_company("Student View Co", "For student view tests")
-        employer = create_user("view_emp", "pass", "employer", company_id=company.id)
-        student = create_user("view_student", "pass", "student")
+        employer, _ = create_user("view_emp", "pass", "employer", company_id=company.id)
+        student, _ = create_user("view_student", "pass", "student")
 
         assert employer is not None
         assert student is not None
@@ -846,8 +846,8 @@ def test_staff_can_view_student_details(empty_db):
         client = empty_db
 
         company = create_company("Staff View Co", "For staff view tests")
-        staff = create_user("view_staff", "pass", "staff", company_id=company.id)
-        student = create_user("view_student2", "pass", "student")
+        staff, _ = create_user("view_staff", "pass", "staff", company_id=company.id)
+        student, _ = create_user("view_student2", "pass", "student")
 
         token = login("view_staff", "pass")
         assert token is not None
@@ -866,8 +866,8 @@ def test_staff_can_view_student_details(empty_db):
 def test_student_cannot_view_student_details(empty_db):
         client = empty_db
 
-        student1 = create_user("stud1", "pass", "student")
-        student2 = create_user("stud2", "pass", "student")
+        student1, _ = create_user("stud1", "pass", "student")
+        student2, _ = create_user("stud2", "pass", "student")
 
         token = login("stud1", "pass")
         assert token is not None
@@ -886,7 +886,7 @@ def test_get_student_details_not_found(empty_db):
         client = empty_db
 
         company = create_company("NF Co", "For 404 test")
-        employer = create_user("nf_emp", "pass", "employer", company_id=company.id)
+        employer, _ = create_user("nf_emp", "pass", "employer", company_id=company.id)
 
         token = login("nf_emp", "pass")
         assert token is not None
@@ -909,7 +909,7 @@ def test_get_open_positions_only(empty_db):
          client = empty_db
 
          company = create_company("Positions CO", "For testing positions")
-         employer = create_user("pos_employer","pass","employer", company_id=company.id)
+         employer, _ = create_user("pos_employer","pass","employer", company_id=company.id)
          assert employer is not None
 
          open_pos = open_position(
@@ -949,7 +949,7 @@ def test_get_position_details_success_and_not_found(empty_db):
     client = empty_db
 
     company = create_company("Details Co", "For testing position details")
-    employer = create_user("details_employer", "pass", "employer", company_id=company.id)
+    employer, _ = create_user("details_employer", "pass", "employer", company_id=company.id)
     assert employer is not None
 
     position = open_position(
@@ -983,7 +983,7 @@ def test_employer_can_edit_own_position(empty_db):
     client = empty_db
 
     company = create_company("Edit Co", "Company for editing tests")
-    employer = create_user("edit_emp", "pass", "employer", company_id=company.id)
+    employer, _ = create_user("edit_emp", "pass", "employer", company_id=company.id)
     assert employer is not None
 
     position = open_position(
@@ -1028,8 +1028,8 @@ def test_employer_cannot_edit_another_employers_position(empty_db):
     company1 = create_company("Co1", "First company")
     company2 = create_company("Co2", "Second company")
 
-    owner = create_user("owner_emp", "pass", "employer", company_id=company1.id)
-    other = create_user("other_emp", "pass", "employer", company_id=company2.id)
+    owner, _ = create_user("owner_emp", "pass", "employer", company_id=company1.id)
+    other, _ = create_user("other_emp", "pass", "employer", company_id=company2.id)
     assert owner is not None and other is not None
 
     position = open_position(
@@ -1063,7 +1063,7 @@ def test_employer_can_close_own_position(empty_db):
     client = empty_db
 
     company = create_company("Close Co", "Company for close tests")
-    employer = create_user("closer_emp", "pass", "employer", company_id=company.id)
+    employer, _ = create_user("closer_emp", "pass", "employer", company_id=company.id)
     assert employer is not None
 
     position = open_position(
@@ -1097,8 +1097,8 @@ def test_employer_cannot_close_another_employers_position(empty_db):
     company1 = create_company("Owner Co", "Owner company")
     company2 = create_company("Other Co", "Other company")
 
-    owner = create_user("owner_closer", "pass", "employer", company_id=company1.id)
-    other = create_user("other_closer", "pass", "employer", company_id=company2.id)
+    owner, _ = create_user("owner_closer", "pass", "employer", company_id=company1.id)
+    other, _ = create_user("other_closer", "pass", "employer", company_id=company2.id)
     assert owner is not None and other is not None
 
     position = open_position(
@@ -1129,7 +1129,7 @@ def test_close_nonexistent_position_returns_404(empty_db):
     client = empty_db
 
     company = create_company("Ghost Co", "For 404 test")
-    employer = create_user("ghost_emp", "pass", "employer", company_id=company.id)
+    employer, _ = create_user("ghost_emp", "pass", "employer", company_id=company.id)
     assert employer is not None
 
     token = login("ghost_emp", "pass")
@@ -1149,8 +1149,8 @@ def test_student_can_apply_for_open_position(empty_db):
     client = empty_db
 
     company = create_company("Apply Co", "For apply endpoint tests")
-    employer = create_user("apply_emp", "pass", "employer", company_id=company.id)
-    student = create_user("apply_student", "pass", "student")
+    employer, _ = create_user("apply_emp", "pass", "employer", company_id=company.id)
+    student, _ = create_user("apply_student", "pass", "student")
 
     assert employer is not None
     assert student is not None
@@ -1187,8 +1187,8 @@ def test_student_cannot_apply_twice_to_same_position(empty_db):
     client = empty_db
 
     company = create_company("Dup Apply Co", "For duplicate apply tests")
-    employer = create_user("dup_apply_emp", "pass", "employer", company_id=company.id)
-    student = create_user("dup_apply_student", "pass", "student")
+    employer, _ = create_user("dup_apply_emp", "pass", "employer", company_id=company.id)
+    student, _ = create_user("dup_apply_student", "pass", "student")
 
     position = open_position(
         user_id=employer.id,
@@ -1226,7 +1226,7 @@ def test_non_student_cannot_apply_for_position(empty_db):
     client = empty_db
 
     company = create_company("Role Co", "For role test")
-    employer = create_user("role_emp", "pass", "employer", company_id=company.id)
+    employer, _ = create_user("role_emp", "pass", "employer", company_id=company.id)
     assert employer is not None
 
     position = open_position(
@@ -1250,8 +1250,8 @@ def test_student_cannot_apply_to_closed_position(empty_db):
     client = empty_db
 
     company = create_company("Closed Co", "For closed position test")
-    employer = create_user("closed_emp", "pass", "employer", company_id=company.id)
-    student = create_user("closed_student", "pass", "student")
+    employer, _ = create_user("closed_emp", "pass", "employer", company_id=company.id)
+    student, _ = create_user("closed_student", "pass", "student")
 
     position = open_position(
         user_id=employer.id,
@@ -1280,7 +1280,7 @@ def test_employer_can_create_position_via_api(empty_db):
     client = empty_db
 
     company = create_company("Create Co", "For create endpoint tests")
-    employer = create_user("create_emp", "pass", "employer", company_id=company.id)
+    employer, _ = create_user("create_emp", "pass", "employer", company_id=company.id)
     assert employer is not None
 
     token = login("create_emp", "pass")
@@ -1315,7 +1315,7 @@ def test_student_cannot_create_position(empty_db):
     client = empty_db
 
     company = create_company("Role Co", "For role restriction test")
-    student = create_user("create_student", "pass", "student")
+    student, _ = create_user("create_student", "pass", "student")
     assert student is not None
 
     token = login("create_student", "pass")
@@ -1339,7 +1339,7 @@ def test_create_position_missing_fields_returns_400(empty_db):
     client = empty_db
 
     company = create_company("Bad Payload Co", "For bad payload test")
-    employer = create_user("badpayload_emp", "pass", "employer", company_id=company.id)
+    employer, _ = create_user("badpayload_emp", "pass", "employer", company_id=company.id)
     assert employer is not None
 
     token = login("badpayload_emp", "pass")
@@ -1366,8 +1366,8 @@ def test_get_company_positions_returns_only_that_companys_positions(empty_db):
     company1 = create_company("Company One", "First company")
     company2 = create_company("Company Two", "Second company")
 
-    emp1 = create_user("comp1_emp", "pass", "employer", company_id=company1.id)
-    emp2 = create_user("comp2_emp", "pass", "employer", company_id=company2.id)
+    emp1, _ = create_user("comp1_emp", "pass", "employer", company_id=company1.id)
+    emp2, _ = create_user("comp2_emp", "pass", "employer", company_id=company2.id)
 
     pos1_a = open_position(user_id=emp1.id, title="C1 Position A", number_of_positions=1)
     pos1_b = open_position(user_id=emp1.id, title="C1 Position B", number_of_positions=2)

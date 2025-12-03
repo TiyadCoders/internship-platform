@@ -1,27 +1,43 @@
 from App.models import User, Student, Employer, Staff
 from App.database import db
 
-def create_user(username, password, user_type, company_id=None):
-    try:
-        if user_type == "student":
-            newuser = Student(username=username, password=password)
-        elif user_type == "employer":
-            if company_id is None:
-                return None
-            newuser = Employer(username=username, password=password, company_id=company_id)
-        elif user_type == "staff":
-            if company_id is None:
-                return None
-            newuser = Staff(username=username, password=password, company_id=company_id)
-        else:
-            return None
+def create_user(username, password, user_type, company_id=None, student_data=None):
+    """
+    Create a new user. Returns tuple (user, error_message).
+    On success: (user, None)
+    On failure: (None, error_message)
+    """
+    if user_type == "student":
+        newuser = Student(username=username, password=password)
+        if student_data:
+            newuser.email = student_data['email']
+            newuser.dob = student_data['dob']
+            newuser.gender = student_data['gender']
+            newuser.degree = student_data['degree']
+            newuser.phone = student_data['phone']
+            newuser.gpa = student_data['gpa']
+            newuser.resume = student_data['resume']
+    elif user_type == "employer":
+        if company_id is None:
+            return None, "Company ID is required for employer"
+        newuser = Employer(username=username, password=password, company_id=company_id)
+    elif user_type == "staff":
+        if company_id is None:
+            return None, "Company ID is required for staff"
+        newuser = Staff(username=username, password=password, company_id=company_id)
+    else:
+        return None, "Invalid user type"
 
+    try:
         db.session.add(newuser)
         db.session.commit()
-        return newuser
+        return newuser, None
     except Exception as e:
         db.session.rollback()
-        return None
+        error_msg = str(e)
+        if "UNIQUE constraint failed" in error_msg or "duplicate key" in error_msg.lower():
+            return None, "Username already taken"
+        return None, f"Failed to create user: {error_msg}"
 
 
 def get_user_by_username(username):
